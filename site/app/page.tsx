@@ -8,8 +8,9 @@ export default function Home() {
             Min Xie Ng
           </h1>
           <p className="mt-4 text-lg text-gray-600">
-            Information Systems student with a strong interest in product and user experience,
-            focused on solving real-world problems through thoughtful, user-centred solutions.
+            Information Systems student with a strong interest in product and user
+            experience, focused on solving real-world problems through thoughtful,
+            user-centred solutions.
           </p>
         </div>
       </section>
@@ -20,43 +21,54 @@ export default function Home() {
           <h2 className="text-2xl font-semibold">Projects</h2>
 
           <div className="mt-8 space-y-6">
-            <div className="border rounded-lg p-6 bg-white">
-              <h3 className="font-medium">CDC Vouchers UX</h3>
+            {/* CDC PROJECT CARD */}
+            <a
+              href="/projects/cdc"
+              className="block border rounded-lg p-6 bg-white hover:shadow-md transition"
+            >
+              <h3 className="font-medium">
+                CDC Vouchers — Exact Amount Payment UX
+              </h3>
               <p className="mt-2 text-sm text-gray-600">
-                Improving exact-amount payments for elderly users through better interaction design.
+                Enabling optional exact-amount payments for digitally confident users,
+                while preserving default flows for elderly users and merchants.
+              </p>
+              <p className="mt-3 text-sm font-medium text-blue-600">
+                View case study →
+              </p>
+            </a>
+
+            {/* SMU APP PROJECT CARD (placeholder) */}
+            <div className="border rounded-lg p-6 bg-white opacity-60">
+              <h3 className="font-medium">
+                SMU App — Food Pre-Order Feature
+              </h3>
+              <p className="mt-2 text-sm text-gray-600">
+                Reducing campus food queue times through pre-ordering.
+              </p>
+              <p className="mt-3 text-sm text-gray-400">
+                Case study coming soon
               </p>
             </div>
 
-            <div className="border rounded-lg p-6 bg-white">
-              <h3 className="font-medium">SMU App – Food Pre-Order</h3>
+            {/* CMB PROJECT CARD (placeholder) */}
+            <div className="border rounded-lg p-6 bg-white opacity-60">
+              <h3 className="font-medium">
+                CMB Dating App — Product Concept
+              </h3>
               <p className="mt-2 text-sm text-gray-600">
-                A campus feature to reduce queue time by allowing students to pre-order meals.
+                Exploring transparency and intent in dating app matching.
               </p>
-            </div>
-
-            <div className="border rounded-lg p-6 bg-white">
-              <h3 className="font-medium">CMB Dating App Concept</h3>
-              <p className="mt-2 text-sm text-gray-600">
-                A product concept exploring better matching transparency and user intent.
+              <p className="mt-3 text-sm text-gray-400">
+                Case study coming soon
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ABOUT */}
-      <section className="px-8 py-20">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl font-semibold">About</h2>
-          <p className="mt-4 text-gray-600">
-            I enjoy working at the intersection of users, business, and technology.
-            I’m especially interested in product roles where clear thinking and communication matter.
-          </p>
-        </div>
-      </section>
-
       {/* CONTACT */}
-      <section className="px-8 py-20 bg-gray-50">
+      <section className="px-8 py-20">
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl font-semibold">Contact</h2>
           <p className="mt-4 text-gray-600">
