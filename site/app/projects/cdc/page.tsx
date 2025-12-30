@@ -321,19 +321,19 @@ export default function CDCProject() {
               <ul className="mt-4 space-y-2 text-sm text-gray-600">
                 <li className="flex gap-2">
                   <span className="mt-0.5 text-gray-400" aria-hidden>
-                    —
+                    ✘
                   </span>
                   Elderly users who prefer the existing voucher flow
                 </li>
                 <li className="flex gap-2">
                   <span className="mt-0.5 text-gray-400" aria-hidden>
-                    —
+                    ✘
                   </span>
                   Users uncomfortable with numeric input
                 </li>
                 <li className="flex gap-2">
                   <span className="mt-0.5 text-gray-400" aria-hidden>
-                    —
+                    ✘
                   </span>
                   Merchants — their workflow remains unchanged
                 </li>
