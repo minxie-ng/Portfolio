@@ -1,4 +1,9 @@
+// /site/app/page.tsx
+"use client";
+
 import Link from "next/link";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 
 type Project = {
   title: string;
@@ -43,11 +48,76 @@ const projects: Project[] = [
   },
 ];
 
+const clamp = (n: number, min = 0, max = 1) => Math.min(max, Math.max(min, n));
+
 export default function Home() {
+  const photoSectionRef = useRef<HTMLElement | null>(null);
+  const [photoProgress, setPhotoProgress] = useState(0);
+
+  // Scroll-driven photo reveal
+  useEffect(() => {
+    let raf = 0;
+
+    const update = () => {
+      const el = photoSectionRef.current;
+      if (!el) return;
+
+      const rect = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+
+      // ✅ Progress based on how far we've scrolled THROUGH this section.
+      // rect.top = 0  -> section top at viewport top  -> progress 0
+      // rect.top = -totalScroll -> section fully passed -> progress 1
+      const totalScroll = Math.max(el.offsetHeight - vh, 1);
+      const scrolled = clamp((-rect.top) / totalScroll);
+      setPhotoProgress(scrolled);
+    };
+
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        update();
+      });
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  /**
+   * ✅ Make it linger MUCH longer + fade much later
+   *
+   * If you want even longer linger:
+   * - Increase section height (h-[600vh] -> h-[700vh] etc.)
+   * If you want fade to start even later:
+   * - Increase fadeOutStart (0.86 -> 0.90)
+   * If you want fade even slower:
+   * - Increase fadeOutEnd closer to 1.0 (0.995 -> 0.999)
+   */
+  const fadeInStart = 0.0;
+  const fadeInEnd = 0.06;
+
+  const fadeOutStart = 0.86;  // <-- fade starts later (linger)
+  const fadeOutEnd = 0.995;   // <-- fade finishes very late (slow)
+
+  const fadeIn = clamp((photoProgress - fadeInStart) / (fadeInEnd - fadeInStart));
+  const fadeOut = clamp((fadeOutEnd - photoProgress) / (fadeOutEnd - fadeOutStart));
+  const opacity = fadeIn * fadeOut;
+
+  const scale = 1.03 - photoProgress * 0.02;
+
   return (
     <main className="bg-white text-black">
       {/* HERO */}
-      <section className="px-6 sm:px-8 py-16 sm:py-24">
+      <section className="px-6 sm:px-8 py-20 sm:py-28">
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs text-gray-600">
             <span>🇸🇬</span>
@@ -56,132 +126,88 @@ export default function Home() {
             <span>Min Xie Ng</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight leading-tight">
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight">
             Min Xie Ng
           </h1>
 
-          <p className="text-base sm:text-lg text-gray-600 max-w-2xl leading-7 sm:leading-8">
+          <p className="max-w-2xl text-gray-600 text-base sm:text-lg leading-7">
             Information Systems student with a strong interest in product and
             user experience — I like turning real-world constraints into clean,
             usable solutions.
           </p>
+        </div>
+      </section>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
-            <a
-              href="https://www.linkedin.com/in/min-xie-ng/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center rounded-lg bg-black px-5 py-3 text-sm font-medium text-white hover:bg-gray-800 transition"
-            >
-              LinkedIn
-              <span className="ml-2">↗</span>
-            </a>
-
-            <a
-              href="mailto:minxie0000@gmail.com"
-              className="inline-flex items-center justify-center rounded-lg border px-5 py-3 text-sm font-medium text-gray-900 hover:bg-gray-50 transition"
-            >
-              Email me
-              <span className="ml-2">→</span>
-            </a>
+      {/* PHOTO SCROLL SECTION (WHITE, SEAMLESS) */}
+      <section ref={photoSectionRef} className="relative h-[600vh] bg-white">
+        <div className="sticky top-0 h-screen overflow-hidden flex items-center justify-center">
+          {/* Photo */}
+          <div
+            className="absolute inset-0"
+            style={{
+              opacity,
+              transform: `scale(${scale})`,
+              // Keep a tiny transition so it doesn't look jittery,
+              // but most of the smoothness comes from the scroll mapping.
+              transition: "opacity 80ms linear, transform 80ms linear",
+              willChange: "opacity, transform",
+            }}
+          >
+            <Image
+              src="/me/profile.jpg"
+              alt="Min Xie Ng"
+              fill
+              priority
+              className="object-cover"
+            />
           </div>
 
-          {/* Divider */}
-          <div className="pt-6">
-            <div className="h-px w-full bg-gray-200" />
-          </div>
+          {/* White fade-out at bottom (seamless into background) */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-white to-transparent" />
         </div>
       </section>
 
       {/* PROJECTS */}
-      <section className="px-6 sm:px-8 py-16 sm:py-24 bg-gray-50">
+      <section className="bg-gray-50 px-6 sm:px-8 py-20 sm:py-28">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-                Selected Projects
-              </h2>
-              <p className="mt-3 text-gray-600 max-w-2xl leading-7">
-                Visual, scrollable case studies — focused on product decisions,
-                user flows, and practical constraints.
-              </p>
-            </div>
-          </div>
+          <h2 className="text-2xl sm:text-3xl font-semibold">
+            Selected Projects
+          </h2>
 
-          {/* Cards */}
+          <p className="mt-3 text-gray-600 max-w-2xl leading-7">
+            Visual, scrollable case studies — focused on product decisions,
+            user flows, and practical constraints.
+          </p>
+
           <div className="mt-10 grid gap-6 sm:grid-cols-2">
             {projects.map((p) => (
               <Link
                 key={p.href}
                 href={p.href}
-                className="
-                  group relative rounded-xl border bg-white p-6
-                  transition-all duration-200
-                  hover:-translate-y-1 hover:shadow-lg hover:border-gray-300
-                  focus:outline-none focus-visible:ring-2 focus-visible:ring-black/30
-                "
+                className="group rounded-xl border bg-white p-6 transition hover:-translate-y-1 hover:shadow-lg"
               >
-                {/* top row */}
                 <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
+                  <div>
                     <div className="flex items-center gap-2">
                       <span className="text-xl">{p.icon}</span>
-                      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                      <p className="text-xs uppercase tracking-wide text-gray-500">
                         {p.subtitle}
                       </p>
                     </div>
 
-                    <h3 className="mt-2 text-lg sm:text-xl font-semibold leading-snug">
-                      {p.title}
-                    </h3>
+                    <h3 className="mt-2 text-lg font-semibold">{p.title}</h3>
                   </div>
 
-                  <span
-                    className="
-                      shrink-0 inline-flex items-center justify-center
-                      rounded-full border bg-gray-50 px-3 py-1 text-xs text-gray-600
-                      group-hover:bg-white transition
-                    "
-                  >
-                    {p.cta}
-                    <span className="ml-2 transition-transform duration-200 group-hover:translate-x-1">
-                      →
-                    </span>
+                  <span className="rounded-full border px-3 py-1 text-xs text-gray-600">
+                    {p.cta} →
                   </span>
                 </div>
 
                 <p className="mt-4 text-sm text-gray-600 leading-6">
                   {p.description}
                 </p>
-
-                {/* tags */}
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {p.tags.map((t) => (
-                    <span
-                      key={t}
-                      className="
-                        rounded-full border bg-white px-3 py-1
-                        text-xs text-gray-600
-                        transition
-                        group-hover:border-gray-300
-                      "
-                    >
-                      {t}
-                    </span>
-                  ))}
-                </div>
-
-                {/* subtle bottom divider */}
-                <div className="mt-6 h-px w-full bg-gray-100 group-hover:bg-gray-200 transition" />
               </Link>
             ))}
-          </div>
-
-          {/* Small note */}
-          <div className="mt-10">
-            <p className="text-sm text-gray-500 leading-6">
-              Portfolio in progress — more projects coming soon.
-            </p>
           </div>
         </div>
       </section>
@@ -189,35 +215,7 @@ export default function Home() {
       {/* FOOTER */}
       <section className="px-6 sm:px-8 py-12">
         <div className="max-w-4xl mx-auto">
-          <div className="rounded-xl border bg-white p-6 sm:p-8">
-            <h2 className="text-lg font-semibold">Let’s chat</h2>
-            <p className="mt-2 text-sm text-gray-600 max-w-2xl leading-6">
-              If you’re hiring for product / UX / ops roles, I’m happy to share
-              more context or walk through my thinking.
-            </p>
-
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              <a
-                href="mailto:minxie0000@gmail.com"
-                className="inline-flex items-center justify-center rounded-lg bg-black px-5 py-3 text-sm font-medium text-white hover:bg-gray-800 transition"
-              >
-                Email
-                <span className="ml-2">→</span>
-              </a>
-
-              <a
-                href="https://www.linkedin.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-lg border px-5 py-3 text-sm font-medium text-gray-900 hover:bg-gray-50 transition"
-              >
-                LinkedIn
-                <span className="ml-2">↗</span>
-              </a>
-            </div>
-          </div>
-
-          <p className="mt-8 text-xs text-gray-400">
+          <p className="text-xs text-gray-400">
             © {new Date().getFullYear()} Min Xie Ng
           </p>
         </div>
