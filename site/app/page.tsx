@@ -41,7 +41,7 @@ const projects: Project[] = [
     subtitle: "Campus Product / Systems",
     description:
       "A campus-focused product build where I worked through scope, user flow, and prioritisation — translating messy constraints into a shippable plan.",
-    href: "/projects/smu",
+    href: "/projects/smufoodapp",
     tags: ["Scope", "User Flow", "Prioritisation"],
     icon: "🏫",
     cta: "View project",
