@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Project = {
   title: string;
@@ -70,7 +70,10 @@ export default function Home() {
     { lang: "廣東話", text: "将啲乱晒嘅想法整理成清晰可行嘅决定。" },
     { lang: "DE", text: "Ich bringe Chaos in klare Produktentscheidungen." },
     { lang: "ES", text: "Convierto ideas vagas en decisiones claras." },
-    { lang: "MY", text: "Menjadikan idea yang berserabut kepada keputusan produk yang jelas dan praktikal." },
+    {
+      lang: "MY",
+      text: "Menjadikan idea yang berserabut kepada keputusan produk yang jelas dan praktikal.",
+    },
   ];
   const [langIndex, setLangIndex] = useState(0);
 
@@ -82,8 +85,26 @@ export default function Home() {
     return () => window.clearInterval(t);
   }, [prefersReducedMotion]);
 
-  // --- Scroll-driven progress (photo fade-in only) ---
+  // Passport stamps data (make notes feel like they came from the same passport)
+  const passportStamps = useMemo(
+    () => [
+      { code: "EN", level: "C2", note: "Cleared for takeoff", emoji: "🛂" },
+      { code: "中文", level: "C2", note: "Fast lane entry", emoji: "🧧" },
+      { code: "廣東話", level: "B2", note: "Smooth transit", emoji: "🀄" },
+      { code: "DE", level: "B1", note: "Stamp in progress", emoji: "🧳" },
+      { code: "ES", level: "A1", note: "First stamp, onz", emoji: "🌶️" },
+      { code: "MY", level: "B1", note: "Boleh, terus jalan", emoji: "🍃" },
+    ],
+    []
+  );
+
+  // --- Scroll-driven progress (more 3D “passport page roll” reveal) ---
   useEffect(() => {
+    if (prefersReducedMotion) {
+      setProgress(1);
+      return;
+    }
+
     let raf = 0;
 
     const update = () => {
@@ -92,9 +113,9 @@ export default function Home() {
 
       const scrollY = window.scrollY;
 
-      // ✅ fade starts immediately when user scrolls
-      const fadeDistance =120; // pixels to reach full opacity (fast + immediate)
-      const p = scrollY <= 0 ? 0 : clamp((scrollY + 20) / fadeDistance); // +40 gives instant visible change
+      // slightly slower than old fade for a “page roll” vibe
+      const revealDistance = 220;
+      const p = scrollY <= 0 ? 0 : clamp((scrollY + 18) / revealDistance);
 
       setProgress(p);
     };
@@ -116,51 +137,104 @@ export default function Home() {
       window.removeEventListener("resize", onScroll);
       if (raf) cancelAnimationFrame(raf);
     };
+  }, [prefersReducedMotion]);
+
+  // smoothstep easing
+  const roll = prefersReducedMotion ? 1 : progress;
+  const eased = roll * roll * (3 - 2 * roll);
+
+  // “page” transform (soften + less rigid)
+  const rotateX = -86 * (1 - eased); // deg
+  const rotateZ = -1.2 * (1 - eased); // tiny twist
+  const translateY = 22 * (1 - eased); // px
+  const scaleY = 0.92 + 0.08 * eased; // starts slightly compressed
+  const blur = 0.9 * (1 - eased);
+  const shadowA = 0.34 * (1 - eased);
+
+  const photoRollStyle: React.CSSProperties = {
+    opacity: eased,
+    transform: `perspective(1100px) rotateX(${rotateX}deg) rotateZ(${rotateZ}deg) translateY(${translateY}px) scaleY(${scaleY})`,
+    transformOrigin: "top center",
+    filter: `blur(${blur}px)`,
+    boxShadow: `0 30px 110px rgba(0,0,0,${shadowA})`,
+    transition:
+      "transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 180ms ease-out, filter 220ms ease-out, box-shadow 220ms ease-out",
+    willChange: "transform, opacity, filter",
+    backfaceVisibility: "hidden",
+  };
+
+  // Keep this var name if referenced elsewhere
+  const photoOpacity = eased;
+
+  // --- ✨ Layout “wow” (no awkward gap on mobile) ---
+  const photoBlockInnerRef = useRef<HTMLDivElement | null>(null);
+  const [photoBlockH, setPhotoBlockH] = useState(0);
+
+  useEffect(() => {
+    const el = photoBlockInnerRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      const h = el.getBoundingClientRect().height;
+      if (h && Math.abs(h - photoBlockH) > 1) setPhotoBlockH(h);
+    };
+
+    measure();
+
+    const ro = new ResizeObserver(() => measure());
+    ro.observe(el);
+
+    window.addEventListener("resize", measure);
+    return () => {
+      window.removeEventListener("resize", measure);
+      ro.disconnect();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Fade-in only (no fade-out)
-  const photoOpacity = progress; // already 0..1
+  const photoRevealHeight = photoBlockH ? photoBlockH * eased : 0;
 
-    // --- Ultra-subtle cursor glow (follows pointer) ---
-    const glowRef = useRef<HTMLDivElement | null>(null);
+  // --- Ultra-subtle cursor glow (follows pointer) ---
+  const glowRef = useRef<HTMLDivElement | null>(null);
 
-    useEffect(() => {
-      if (prefersReducedMotion) return;
+  useEffect(() => {
+    if (prefersReducedMotion) return;
 
-      const el = glowRef.current;
-      if (!el) return;
+    const el = glowRef.current;
+    if (!el) return;
 
-      let raf = 0;
+    let raf = 0;
 
-      const move = (e: MouseEvent) => {
-        if (raf) return;
-        raf = window.requestAnimationFrame(() => {
-          raf = 0;
-          // position glow using CSS vars (fast + smooth)
-          el.style.setProperty("--x", `${e.clientX}px`);
-          el.style.setProperty("--y", `${e.clientY}px`);
-          el.style.setProperty("--o", `1`);
-        });
-      };
-
-      const leave = () => {
-        el.style.setProperty("--o", `0`);
-      };
-
-      document.addEventListener("mouseout", (e) => {
-        if (!(e.relatedTarget as Node | null)) leave(); // left the window
+    const move = (e: MouseEvent) => {
+      if (raf) return;
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
+        el.style.setProperty("--x", `${e.clientX}px`);
+        el.style.setProperty("--y", `${e.clientY}px`);
+        el.style.setProperty("--o", `1`);
       });
-      window.addEventListener("blur", leave);
+    };
 
-      // start hidden until first move
+    const leave = () => {
       el.style.setProperty("--o", `0`);
+    };
 
-      return () => {
-        window.removeEventListener("mousemove", move);
-        window.removeEventListener("mouseleave", leave);
-        if (raf) window.cancelAnimationFrame(raf);
-      };
-    }, [prefersReducedMotion]);
+    window.addEventListener("mousemove", move, { passive: true });
+
+    document.addEventListener("mouseout", (e) => {
+      if (!(e.relatedTarget as Node | null)) leave();
+    });
+
+    window.addEventListener("blur", leave);
+
+    el.style.setProperty("--o", `0`);
+
+    return () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("blur", leave);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, [prefersReducedMotion]);
 
   return (
     <main className="min-h-screen bg-[#061820] text-white">
@@ -169,7 +243,6 @@ export default function Home() {
         ref={glowRef}
         className="pointer-events-none fixed inset-0 -z-10"
         style={{
-          // starts hidden until mouse move (opacity controlled via --o)
           opacity: "var(--o, 0)",
           transition: "opacity 280ms ease-out",
           background:
@@ -230,32 +303,95 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-6 sm:mt-14 grid gap-10 lg:grid-cols-12 lg:gap-12 items-start">
-            {/* Photo */}
-            <div className="lg:col-span-6">
-              <div
-                ref={photoRef}
-                className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl"
+          {/* ✅ Passport stamp row (now looks more like stamps) */}
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            {passportStamps.map((s, idx) => (
+              <span
+                key={s.code}
+                className={[
+                  "stamp inline-flex items-center gap-2 rounded-full",
+                  "border border-white/10 bg-white/5",
+                  "px-3 py-1 text-[11px] sm:text-xs",
+                  "text-white/75",
+                  "transition duration-200 ease-out",
+                  "hover:bg-white/[0.08] hover:-translate-y-[1px]",
+                  "active:translate-y-0",
+                  "select-none",
+                ].join(" ")}
                 style={{
-                  opacity: photoOpacity,
-                  transition: "opacity 180ms ease-out",
-                  willChange: "opacity",
+                  transform: `rotate(${idx % 2 === 0 ? -1.8 : 1.6}deg)`,
                 }}
+                title={`${s.code} • ${s.level} • ${s.note}`}
               >
-                <Image
-                  src="/me/profile.jpg"
-                  alt="Min Xie Ng"
-                  fill
-                  priority
-                  className="object-cover"
-                />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/30" />
+                <span className="stamp-ink stamp-emoji" aria-hidden>
+                  {s.emoji}
+                </span>
+                <span className="stamp-ink stamp-code">{s.code}</span>
+                <span className="stamp-ink stamp-dot">•</span>
+                <span className="stamp-ink stamp-level">{s.level}</span>
+                <span className="stamp-ink stamp-dot">•</span>
+                <span className="stamp-ink stamp-note">{s.note}</span>
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-6 sm:mt-14 grid gap-10 lg:grid-cols-12 lg:gap-12 items-start">
+            {/* Photo (collapses to avoid empty gap, then expands + rolls in) */}
+            <div className="lg:col-span-6">
+              {/* Animated height wrapper */}
+              <div
+                className="overflow-hidden"
+                style={{
+                  height: photoRevealHeight,
+                  transition: prefersReducedMotion
+                    ? "none"
+                    : "height 560ms cubic-bezier(0.2, 0.92, 0.2, 1)",
+                  willChange: "height",
+                }}
+                aria-hidden={photoOpacity === 0}
+              >
+                {/* Actual content measured at full size */}
+                <div ref={photoBlockInnerRef}>
+                  <div
+                    ref={photoRef}
+                    className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl"
+                    style={photoRollStyle}
+                  >
+                    {/* “rolled edge” overlay for extra 3D depth */}
+                    <div
+                      className="roll-edge pointer-events-none absolute inset-x-0 top-0"
+                      style={{
+                        height: `${Math.max(0, 46 * (1 - eased))}px`,
+                        opacity: Math.max(0, 1 - eased),
+                        transform: `perspective(900px) rotateX(${92 - 92 * eased}deg) translateY(${
+                          -10 * (1 - eased)
+                        }px)`,
+                        transformOrigin: "top center",
+                      }}
+                      aria-hidden
+                    />
+
+                    {/* subtle “passport paper” texture overlay */}
+                    <div className="paper-texture pointer-events-none absolute inset-0" />
+
+                    <Image
+                      src="/me/profile.jpg"
+                      alt="Min Xie Ng"
+                      fill
+                      priority
+                      className="object-cover"
+                    />
+
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/30" />
+                  </div>
+
+                  {/* Caption */}
+                  <p className="mt-3 max-w-md text-xs text-white/50 italic leading-relaxed">
+                    Took the slow train from Pattaya to Bangkok during a solo backpacking trip —
+                    June 2025. One of those days where nothing happened, but a lot clicked.
+                  </p>
+                </div>
               </div>
-              {/* Caption */}
-              <p className="mt-3 max-w-md text-xs text-white/50 italic leading-relaxed">
-                Took the slow train from Pattaya to Bangkok during a solo backpacking trip — June 2025.
-                One of those days where nothing happened, but a lot clicked.
-              </p>
             </div>
 
             {/* Text */}
@@ -272,15 +408,15 @@ export default function Home() {
                 </p>
 
                 <p className="text-white/75">
-                  When I’m not studying or building, I’m usually hiking, planning my next trip,
-                  or juggling conversations in multiple languages, mostly out of curiosity and
+                  When I’m not studying or building, I’m usually hiking, planning my next trip, or
+                  juggling conversations in multiple languages, mostly out of curiosity and
                   sometimes just for fun.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* ✅ Divider BELOW About (same vibe as Hero divider) */}
+          {/* ✅ Divider BELOW About */}
           <div className="mt-18 h-px w-full bg-white/10" />
         </div>
       </section>
@@ -288,13 +424,11 @@ export default function Home() {
       {/* PROJECTS */}
       <section className="px-6 sm:px-8 py-8 sm:py-0">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-semibold text-white">
-            Projects
-          </h2>
+          <h2 className="text-2xl sm:text-3xl font-semibold text-white">Projects</h2>
 
           <p className="mt-3 text-white/70 max-w-2xl leading-7">
-            Visual, scrollable case studies — focused on product decisions,
-            user flows, and practical constraints.
+            Visual, scrollable case studies — focused on product decisions, user flows, and practical
+            constraints.
           </p>
 
           <div className="mt-10 grid gap-6 sm:grid-cols-2">
@@ -316,20 +450,14 @@ export default function Home() {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-xl">{p.icon}</span>
-                      <p className="text-xs uppercase tracking-wide text-white/55">
-                        {p.subtitle}
-                      </p>
+                      <p className="text-xs uppercase tracking-wide text-white/55">{p.subtitle}</p>
                     </div>
 
-                    <h3 className="mt-2 text-lg font-semibold text-white">
-                      {p.title}
-                    </h3>
+                    <h3 className="mt-2 text-lg font-semibold text-white">{p.title}</h3>
                   </div>
                 </div>
 
-                <p className="relative mt-4 text-sm text-white/70 leading-6">
-                  {p.description}
-                </p>
+                <p className="relative mt-4 text-sm text-white/70 leading-6">{p.description}</p>
 
                 <p className="relative mt-4 text-xs font-semibold text-white/55 transition-transform duration-300 ease-out group-hover:translate-x-0.5">
                   Tap to preview →
@@ -339,19 +467,17 @@ export default function Home() {
           </div>
         </div>
       </section>
-      
+
       {/* CONTACT */}
       <section className="px-6 sm:px-8 py-16">
         <div className="max-w-6xl mx-auto">
           <div className="h-px w-full bg-white/10 mb-10" />
 
-          <h2 className="text-2xl sm:text-3xl font-semibold text-white">
-            Let’s connect !
-          </h2>
+          <h2 className="text-2xl sm:text-3xl font-semibold text-white">Let’s connect !</h2>
 
           <p className="mt-3 max-w-2xl text-white/70 leading-7">
-            If you’d like to chat about product, projects, travel stories, or just say hi,
-            feel free to reach out :"D
+            If you’d like to chat about product, projects, travel stories, or just say hi, feel free
+            to reach out ! :"D
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
@@ -385,11 +511,109 @@ export default function Home() {
       {/* FOOTER */}
       <section className="px-6 sm:px-8 py-10">
         <div className="max-w-6xl mx-auto">
-          <p className="text-xs text-white/40">
-            © {new Date().getFullYear()} Min Xie Ng
-          </p>
+          <p className="text-xs text-white/40">© {new Date().getFullYear()} Min Xie Ng</p>
         </div>
       </section>
+
+      <style jsx global>{`
+        /* --- Passport-stamp vibe --- */
+        .stamp {
+          position: relative;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+
+          /* “ink” feel */
+          filter: saturate(1.05) contrast(1.02);
+        }
+
+        /* rough, stamp-y edge + inner ring */
+        .stamp:before,
+        .stamp:after {
+          content: "";
+          position: absolute;
+          inset: -3px;
+          border-radius: 9999px;
+          pointer-events: none;
+        }
+
+        .stamp:before {
+          border: 1px dashed rgba(255, 255, 255, 0.22);
+          opacity: 0.8;
+          transform: rotate(-0.6deg);
+        }
+
+        .stamp:after {
+          inset: 2px;
+          border-radius: 9999px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          opacity: 0.85;
+        }
+
+        /* “ink” text styles */
+        .stamp-ink {
+          opacity: 0.92;
+          text-shadow: 0 0 0.6px rgba(255, 255, 255, 0.25);
+        }
+
+        .stamp-emoji {
+          opacity: 0.65;
+          transform: rotate(-6deg);
+        }
+
+        .stamp-code {
+          font-weight: 800;
+          letter-spacing: 0.14em;
+        }
+
+        .stamp-level {
+          font-weight: 700;
+          opacity: 0.85;
+        }
+
+        .stamp-note {
+          opacity: 0.78;
+          letter-spacing: 0.06em;
+          text-transform: none;
+        }
+
+        .stamp-dot {
+          opacity: 0.35;
+        }
+
+        /* --- Photo “passport page” texture + roll edge --- */
+        .paper-texture {
+          background-image:
+            radial-gradient(1200px 800px at 20% 10%, rgba(255, 255, 255, 0.05), transparent 55%),
+            radial-gradient(900px 700px at 80% 30%, rgba(255, 255, 255, 0.03), transparent 60%),
+            linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 40%),
+            repeating-linear-gradient(
+              90deg,
+              rgba(255, 255, 255, 0.02),
+              rgba(255, 255, 255, 0.02) 1px,
+              transparent 1px,
+              transparent 10px
+            );
+          mix-blend-mode: soft-light;
+          opacity: 0.55;
+        }
+
+        .roll-edge {
+          /* “curl” highlight + shadow (feels more 3D than flat rotate) */
+          background:
+            linear-gradient(
+              180deg,
+              rgba(255, 255, 255, 0.22),
+              rgba(255, 255, 255, 0.12) 26%,
+              rgba(0, 0, 0, 0.18) 62%,
+              rgba(0, 0, 0, 0.0)
+            );
+          box-shadow:
+            0 18px 50px rgba(0, 0, 0, 0.22),
+            inset 0 -10px 18px rgba(0, 0, 0, 0.22),
+            inset 0 6px 14px rgba(255, 255, 255, 0.08);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+      `}</style>
     </main>
   );
 }
