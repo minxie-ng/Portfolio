@@ -129,6 +129,8 @@ export default function SMUFoodAppProject() {
   }, []);
 
   // ---- Edit these if you want ----
+  const LIVE_PROTOTYPE_URL = "https://smu-food-preorder.vercel.app/";
+  const REPO_URL = "https://github.com/minxie-ng/smu-food-preorder";
   const DEMO_VIDEO_SRC = "/projects/smufoodapp/demo.mp4"; // <- your video file
   // const DEMO_POSTER = "/projects/smufoodapp/poster.jpg"; // optional
 
@@ -426,7 +428,7 @@ export default function SMUFoodAppProject() {
                 <span aria-hidden>🎥</span>
                 <span>Prototype demo (ordering → checkout → confirmation)</span>
               </div>
-              <span className="text-sm text-white/50">Video</span>
+              <span className="text-sm text-white/50">Demo video</span>
             </div>
 
             <div className="aspect-video w-full bg-black/10">
@@ -434,6 +436,59 @@ export default function SMUFoodAppProject() {
                 <source src={DEMO_VIDEO_SRC} type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
+            </div>
+          </div>
+
+          {/* Embedded live prototype */}
+          <div className="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+            <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-4 py-3">
+              <div className="flex items-center gap-2 text-sm text-white/70">
+                <span aria-hidden>🧪</span>
+                <span>Interactive prototype (Expo Web)</span>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <a
+                  href={REPO_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-white/60 underline-offset-4 hover:underline"
+                >
+                  View code ↗
+                </a>
+                <a
+                  href={LIVE_PROTOTYPE_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm text-white/60 underline-offset-4 hover:underline"
+                >
+                  Open full screen ↗
+                </a>
+              </div>
+            </div>
+
+            <div className="bg-black/10">
+              <div className="relative mx-auto w-full max-w-[380px] overflow-hidden rounded-xl border border-white/10">
+                <div className="relative h-[70vh] max-h-[720px] min-h-[520px] w-full">
+                  <iframe
+                    src={LIVE_PROTOTYPE_URL}
+                    title="SMU Food Pre-Order Prototype"
+                    className="absolute inset-0 h-full w-full border-0"
+                    loading="lazy"
+                    allow="clipboard-write; fullscreen"
+                  />
+                </div>
+              </div>
+
+              <p className="mx-auto mt-3 max-w-[380px] text-xs text-white/45 leading-5">
+                (Optimised for laptop viewing — the embedded frame is capped in height. Use “Open full screen” for the full experience.)
+              </p>
+            </div>
+
+            <div className="border-t border-white/10 px-4 py-3">
+              <p className="text-sm text-white/70 leading-6">
+                Tip: try selecting <span className="font-medium text-white">12:15 PM</span> and submitting to see how the UI recovers when a slot becomes unavailable.
+              </p>
             </div>
           </div>
 
