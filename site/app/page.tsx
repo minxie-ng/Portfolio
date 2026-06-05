@@ -61,6 +61,7 @@ function usePrefersReducedMotion() {
 export default function Home() {
   const photoRef = useRef<HTMLDivElement | null>(null);
   const [progress, setProgress] = useState(0);
+  const [mountainProgressRaw, setMountainProgressRaw] = useState(0);
 
   // --- language rotate (small, tasteful) ---
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -102,22 +103,24 @@ export default function Home() {
   useEffect(() => {
     if (prefersReducedMotion) {
       setProgress(1);
+      setMountainProgressRaw(0);
       return;
     }
 
     let raf = 0;
 
     const update = () => {
-      const el = photoRef.current;
-      if (!el) return;
-
       const scrollY = window.scrollY;
 
       // slightly slower than old fade for a “page roll” vibe
       const revealDistance = 220;
       const p = scrollY <= 0 ? 0 : clamp((scrollY + 18) / revealDistance);
 
+      const aboutPeak = window.innerHeight * 0.86;
+      const mountainP = scrollY <= 0 ? 0 : clamp(scrollY / Math.max(aboutPeak, 1));
+
       setProgress(p);
+      setMountainProgressRaw(mountainP);
     };
 
     const onScroll = () => {
@@ -194,6 +197,39 @@ export default function Home() {
 
   const photoRevealHeight = photoBlockH ? photoBlockH * eased : 0;
 
+  const mountainMotion = 1 - Math.pow(1 - mountainProgressRaw, 2.2);
+  const mountainVisibility = mountainProgressRaw * mountainProgressRaw * (3 - 2 * mountainProgressRaw);
+  const mountainSvgStyle: React.CSSProperties = {
+    opacity: 0.08 + mountainVisibility * 0.3,
+    transform: `translate3d(calc(-50% + ${mountainMotion * 20}px), ${mountainMotion * -24}px, 0) scale(${1.02 + mountainMotion * 0.025})`,
+    transition: prefersReducedMotion
+      ? "none"
+      : "transform 180ms ease-out, opacity 220ms ease-out",
+    willChange: prefersReducedMotion ? "auto" : "transform, opacity",
+    mixBlendMode: "screen",
+  };
+  const mountainLineStyle: React.CSSProperties = {
+    strokeDasharray: prefersReducedMotion ? "1 0" : "0.5 1",
+    strokeDashoffset: prefersReducedMotion ? 0 : 0.62 - mountainMotion * 0.84,
+    transition: prefersReducedMotion ? "none" : "stroke-dashoffset 180ms ease-out",
+  };
+  const mountainRidgeStyle: React.CSSProperties = {
+    opacity: 0.035 + mountainVisibility * 0.13,
+    transform: `translate3d(${mountainMotion * -12}px, ${mountainMotion * -12}px, 0)`,
+    transition: prefersReducedMotion
+      ? "none"
+      : "transform 220ms ease-out, opacity 220ms ease-out",
+    willChange: prefersReducedMotion ? "auto" : "transform, opacity",
+  };
+  const mountainTraceStyle: React.CSSProperties = {
+    opacity: 0.025 + mountainVisibility * 0.11,
+    transform: `translate3d(${mountainMotion * -18}px, ${mountainMotion * -18}px, 0)`,
+    transition: prefersReducedMotion
+      ? "none"
+      : "transform 220ms ease-out, opacity 220ms ease-out",
+    willChange: prefersReducedMotion ? "auto" : "transform, opacity",
+  };
+
   // --- Ultra-subtle cursor glow (follows pointer) ---
   const glowRef = useRef<HTMLDivElement | null>(null);
 
@@ -251,34 +287,99 @@ export default function Home() {
         aria-hidden
       />
 
-      {/* HERO */}
-      <section className="relative px-6 sm:px-8 pt-14 pb-12 sm:pt-16 sm:pb-16">
-        <div className="max-w-6xl mx-auto">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/75">
-            <span>🇸🇬</span>
-            <span>Portfolio</span>
-            <span className="text-white/30">•</span>
-            <span>Min Xie Ng</span>
-          </div>
-
-          <div className="mt-6">
-            <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight">
-              Min Xie Ng
-            </h1>
-
-            <p className="mt-4 max-w-2xl text-white/70 text-base sm:text-lg leading-7">
-              Information Systems student with a strong interest in product and
-              user experience — I like turning real-world constraints into clean,
-              usable solutions.
-            </p>
-          </div>
-
-          <div className="mt-20 h-px w-full bg-white/10" />
+      {/* HERO + ABOUT transition atmosphere */}
+      <div className="relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[1120px] sm:h-[1320px]" aria-hidden>
+          <div className="absolute inset-x-0 top-[78vh] h-96 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.04),transparent_64%)]" />
+          <svg
+            className="absolute left-1/2 top-[72vh] h-[22rem] w-[64rem] max-w-none sm:top-[72vh] sm:h-[30rem] sm:w-[92rem] lg:top-[70vh] lg:h-[34rem] lg:w-[112rem]"
+            viewBox="0 0 1440 420"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            style={mountainSvgStyle}
+          >
+            <defs>
+              <filter id="hero-mountain-glow" x="-15%" y="-80%" width="130%" height="260%">
+                <feGaussianBlur stdDeviation="7" result="blur" />
+                <feColorMatrix
+                  in="blur"
+                  type="matrix"
+                  values="0 0 0 0 0.86 0 0 0 0 0.98 0 0 0 0 1 0 0 0 0.38 0"
+                  result="glow"
+                />
+                <feMerge>
+                  <feMergeNode in="glow" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <linearGradient id="hero-mountain-line" x1="80" y1="220" x2="1360" y2="220" gradientUnits="userSpaceOnUse">
+                <stop stopColor="white" stopOpacity="0" />
+                <stop offset="0.14" stopColor="white" stopOpacity="0.34" />
+                <stop offset="0.45" stopColor="white" stopOpacity="0.86" />
+                <stop offset="0.72" stopColor="white" stopOpacity="0.54" />
+                <stop offset="1" stopColor="white" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path
+              pathLength="1"
+              d="M58 274 C136 244 196 206 268 214 C326 221 364 260 430 238 C504 214 550 136 620 138 C694 140 742 236 810 226 C878 216 908 164 966 160 C1038 154 1086 232 1156 218 C1224 204 1268 162 1386 132"
+              stroke="url(#hero-mountain-line)"
+              strokeWidth="2.1"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#hero-mountain-glow)"
+              style={mountainLineStyle}
+            />
+            <path
+              d="M242 252 L344 170 L434 250 L506 214 L602 284 L720 132 L858 278 L962 198 L1070 254 L1184 178"
+              stroke="white"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={mountainRidgeStyle}
+            />
+            <path
+              d="M96 318 C284 276 452 304 624 292 C782 281 890 242 1038 238 C1172 234 1260 198 1370 162"
+              stroke="white"
+              strokeWidth="1.1"
+              strokeLinecap="round"
+              style={mountainTraceStyle}
+            />
+          </svg>
         </div>
-      </section>
 
-      {/* ABOUT ME */}
-      <section className="relative px-6 sm:px-8 py-8 sm:py-0">
+        {/* HERO */}
+        <section className="relative flex min-h-[88svh] px-6 sm:px-8 pt-14 pb-14 sm:min-h-screen sm:pt-16 sm:pb-20">
+          <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col justify-center">
+            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/75">
+              <span>🇸🇬</span>
+              <span>Portfolio</span>
+              <span className="text-white/30">•</span>
+              <span>Min Xie Ng</span>
+            </div>
+
+            <div className="mt-8 sm:mt-10">
+              <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight">
+                Min Xie Ng
+              </h1>
+
+              <p className="mt-6 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-6xl lg:text-7xl">
+                Curious enough to explore.
+                <br />
+                Practical enough to build.
+              </p>
+
+              <p className="mt-6 max-w-2xl text-xs uppercase tracking-[0.24em] text-white/55 sm:text-sm sm:tracking-[0.28em]">
+                Information Systems · Product · Tech · Languages · Mountains · Backpacking
+              </p>
+            </div>
+
+            <div className="mt-16 h-px w-full bg-white/10 sm:mt-24" />
+          </div>
+        </section>
+
+        {/* ABOUT ME */}
+        <section className="relative z-10 px-6 sm:px-8 pt-12 pb-8 sm:pt-20 sm:pb-0">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-center text-3xl sm:text-5xl font-semibold tracking-[0.22em] text-white/90">
             ABOUT ME
@@ -419,7 +520,8 @@ export default function Home() {
           {/* ✅ Divider BELOW About */}
           <div className="mt-18 h-px w-full bg-white/10" />
         </div>
-      </section>
+        </section>
+      </div>
 
       {/* PROJECTS */}
       <section className="px-6 sm:px-8 py-8 sm:py-0">
