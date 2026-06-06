@@ -305,6 +305,31 @@ export default function Home() {
       : "opacity 220ms ease-out, transform 220ms ease-out",
   };
 
+  const heroWordRevealRaw = prefersReducedMotion ? 0 : clamp((progress - 0.12) / 0.3);
+  const heroWordReveal = heroWordRevealRaw * heroWordRevealRaw * (3 - 2 * heroWordRevealRaw);
+  const heroWordFromStyle: React.CSSProperties = {
+    opacity: 1 - heroWordReveal,
+    transform: prefersReducedMotion ? "none" : `translate3d(0, ${heroWordReveal * -9}px, 0)`,
+    filter: prefersReducedMotion ? "none" : `blur(${heroWordReveal * 1}px)`,
+    transition: prefersReducedMotion
+      ? "none"
+      : "opacity 180ms ease-out, transform 220ms ease-out, filter 220ms ease-out",
+  };
+  const heroWordToStyle: React.CSSProperties = {
+    opacity: heroWordReveal,
+    transform: prefersReducedMotion ? "none" : `translate3d(0, ${(1 - heroWordReveal) * 9}px, 0)`,
+    filter: prefersReducedMotion ? "none" : `blur(${(1 - heroWordReveal) * 1}px)`,
+    textShadow: "0 0 16px rgba(159, 231, 191, 0.32), 0 0 34px rgba(159, 231, 191, 0.12)",
+    transition: prefersReducedMotion
+      ? "none"
+      : "opacity 180ms ease-out, transform 220ms ease-out, filter 220ms ease-out",
+  };
+  const heroIdentityStyle: React.CSSProperties = {
+    opacity: 0.55 - heroWordReveal * 0.08,
+    transform: prefersReducedMotion ? "none" : `translate3d(0, ${heroWordReveal * 4}px, 0)`,
+    transition: prefersReducedMotion ? "none" : "opacity 220ms ease-out, transform 220ms ease-out",
+  };
+
   const mountainMotion = 1 - Math.pow(1 - mountainProgressRaw, 2.2);
   const mountainVisibility = mountainProgressRaw * mountainProgressRaw * (3 - 2 * mountainProgressRaw);
   const mountainSvgStyle: React.CSSProperties = {
@@ -511,13 +536,40 @@ export default function Home() {
             </p>
 
             <div className="mt-8 sm:mt-10">
-              <h1 className="mx-auto max-w-4xl text-4xl font-semibold tracking-tight text-white sm:text-6xl lg:text-[4.6rem] lg:leading-[1.02]">
-                Curious enough to explore.
+              <h1 className="mx-auto max-w-[22rem] text-[2.28rem] font-semibold leading-[1.12] tracking-tight text-white sm:max-w-4xl sm:text-6xl sm:leading-[1.08] lg:text-[4.6rem] lg:leading-[1.02]">
+                Curious enough to{" "}
+                <span className="relative inline-block w-[3.25em] align-baseline sm:w-[3.18em]">
+                  <span className="inline-block" style={heroWordFromStyle}>
+                    explore.
+                  </span>
+                  <span
+                    className="absolute left-0 top-0 inline-block text-[#9fe7bf]"
+                    style={heroWordToStyle}
+                    aria-hidden
+                  >
+                    try.
+                  </span>
+                </span>
                 <br />
-                Practical enough to build.
+                Practical enough to{" "}
+                <span className="relative inline-block w-[3.68em] align-baseline sm:w-[3.58em]">
+                  <span className="inline-block" style={heroWordFromStyle}>
+                    build.
+                  </span>
+                  <span
+                    className="absolute left-0 top-0 inline-block text-[#9fe7bf]"
+                    style={heroWordToStyle}
+                    aria-hidden
+                  >
+                    progress.
+                  </span>
+                </span>
               </h1>
 
-              <p className="mx-auto mt-7 max-w-2xl text-xs uppercase leading-6 tracking-[0.18em] text-white/55 sm:text-sm sm:tracking-[0.22em]">
+              <p
+                className="mx-auto mt-9 max-w-2xl text-xs uppercase leading-6 tracking-[0.18em] text-white sm:mt-10 sm:text-sm sm:tracking-[0.22em]"
+                style={heroIdentityStyle}
+              >
                 SMU Information Systems · Product · Tech · Languages · Mountains · Backpacking
               </p>
             </div>
@@ -602,7 +654,7 @@ export default function Home() {
             className="relative mt-6 grid gap-7 rounded-[2rem] border border-white/10 bg-white/[0.025] p-3 shadow-[0_22px_90px_rgba(0,0,0,0.22)] sm:mt-14 lg:grid-cols-12 lg:items-start lg:p-4"
           >
             {/* Visual card */}
-            <div className="relative px-2 py-3 sm:px-3 sm:py-4 lg:col-span-7" style={photoCardStyle}>
+            <div className="relative flex px-2 py-3 sm:px-3 sm:py-4 lg:col-span-7 lg:self-start" style={photoCardStyle}>
               <div
                 className="pointer-events-none absolute inset-3 overflow-hidden rounded-[1.55rem] border border-white/10 bg-white/[0.03]"
                 style={photoStackBackStyle}
@@ -640,10 +692,10 @@ export default function Home() {
                 onMouseLeave={stopPhotoPreview}
                 onFocus={startPhotoPreview}
                 onBlur={stopPhotoPreview}
-                className="group relative block w-full rounded-[1.45rem] border border-white/10 bg-white/[0.045] p-3 text-left shadow-[0_22px_70px_rgba(0,0,0,0.28)] transition hover:border-white/18 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 lg:p-4"
+                className="group relative flex min-h-[25rem] w-full flex-col rounded-[1.45rem] border border-white/10 bg-white/[0.045] p-3 text-left shadow-[0_22px_70px_rgba(0,0,0,0.28)] transition hover:border-white/18 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 sm:min-h-[24.5rem] lg:min-h-0 lg:p-4"
                 aria-label="Show next photo moment"
               >
-              {/* Animated height wrapper */}
+              {/* Animated image reveal */}
               <div
                 className="overflow-hidden"
                 style={{
@@ -655,11 +707,11 @@ export default function Home() {
                 }}
                 aria-hidden={photoOpacity === 0}
               >
-                {/* Actual content measured at full size */}
-                <div ref={photoBlockInnerRef}>
+                {/* Actual image area measured at full size */}
+                <div ref={photoBlockInnerRef} className="h-[20.5rem] sm:h-[20rem] lg:h-[20.75rem]">
                   <div
                     ref={photoRef}
-                    className="relative aspect-[16/10] w-full overflow-hidden rounded-3xl"
+                    className="relative h-full w-full overflow-hidden rounded-3xl"
                     style={photoRollStyle}
                   >
                     {/* “rolled edge” overlay for extra 3D depth */}
@@ -706,40 +758,40 @@ export default function Home() {
 
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/30" />
                   </div>
-
-                  {/* Caption */}
-                  <div className="mt-3 flex flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                    <p className="max-w-md text-xs text-white/50 italic leading-relaxed">
-                      {activePhoto.caption}
-                    </p>
-                    <span
-                      className={[
-                        "inline-flex shrink-0 items-center rounded-full border border-white/12 bg-white/[0.055] px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] text-white/58 shadow-[0_10px_30px_rgba(0,0,0,0.18)] transition group-hover:border-white/20 group-hover:bg-white/[0.08] group-hover:text-white/75",
-                        prefersReducedMotion ? "" : "photo-cue-attention",
-                      ].join(" ")}
-                    >
-                      3 moments · tap to explore
-                    </span>
-                  </div>
                 </div>
+              </div>
+
+              {/* Caption footer */}
+              <div className="mt-2.5 flex shrink-0 flex-col gap-1.5 rounded-b-[1.1rem] bg-[#061820]/20 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                <p className="min-w-0 max-w-[32rem] text-[0.72rem] italic leading-[1.48] text-white/52 sm:flex-1 sm:text-xs">
+                  {activePhoto.caption}
+                </p>
+                <span
+                  className={[
+                    "inline-flex shrink-0 items-center self-start rounded-full border border-white/12 bg-white/[0.055] px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] text-white/58 shadow-[0_10px_30px_rgba(0,0,0,0.18)] transition group-hover:border-white/20 group-hover:bg-white/[0.08] group-hover:text-white/75",
+                    prefersReducedMotion ? "" : "photo-cue-attention",
+                  ].join(" ")}
+                >
+                  3 moments · tap to explore
+                </span>
               </div>
             </button>
             </div>
 
             {/* Text note */}
             <div
-              className="flex h-[30.5rem] self-center rounded-[1.55rem] border border-white/[0.08] bg-white/[0.032] p-4 shadow-[0_18px_52px_rgba(0,0,0,0.14)] sm:h-[29.5rem] sm:p-5 lg:col-span-5 lg:h-auto lg:self-stretch lg:p-6 xl:p-7"
+              className="flex h-[24.75rem] self-center rounded-[1.55rem] border border-white/[0.08] bg-white/[0.032] p-3.5 shadow-[0_18px_52px_rgba(0,0,0,0.14)] sm:h-[24.5rem] sm:p-4 lg:col-span-5 lg:mt-4 lg:h-[25rem] lg:self-start lg:p-4 xl:p-5"
               style={aboutNoteStyle}
             >
               <div className="flex h-full w-full max-w-[29rem] flex-col">
-                <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
+                <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] pb-2.5">
                   <p className="text-[0.62rem] font-semibold uppercase leading-none tracking-[0.26em] text-white/38">
                     FIELD NOTE 01
                   </p>
                   <span className="h-1.5 w-1.5 rounded-full bg-white/30" aria-hidden />
                 </div>
 
-                <div className="mt-4 flex min-h-0 flex-1 flex-col gap-2.5">
+                <div className="mt-3 flex min-h-0 flex-1 flex-col gap-2">
                   {[
                     {
                       index: "01",
@@ -782,8 +834,8 @@ export default function Home() {
                             ? "transition-none"
                             : "transition-[flex,background-color,border-color,opacity,padding,box-shadow] duration-300 ease-out",
                           isActive
-                            ? "flex-[1_1_auto] border-white/[0.14] bg-white/[0.052] py-4 shadow-[0_14px_42px_rgba(0,0,0,0.13)]"
-                            : "flex-[0_0_4.15rem] border-white/[0.075] bg-white/[0.028] py-3 opacity-68 sm:flex-[0_0_4.05rem]",
+                            ? "flex-[1_1_auto] border-white/[0.14] bg-white/[0.052] py-3.5 shadow-[0_14px_42px_rgba(0,0,0,0.13)]"
+                            : "flex-[0_0_3.45rem] border-white/[0.075] bg-white/[0.028] py-2.5 opacity-68 sm:flex-[0_0_3.35rem]",
                           "hover:border-white/[0.12] hover:bg-white/[0.045] focus-visible:ring-2 focus-visible:ring-white/24",
                         ].join(" ")}
                         aria-expanded={isActive}
@@ -817,7 +869,7 @@ export default function Home() {
                                 isActive ? "mt-2 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0",
                               ].join(" ")}
                             >
-                              <p className="min-h-0 max-w-[22rem] overflow-hidden text-[0.86rem] leading-[1.62] text-white/58 sm:text-[0.92rem]">
+                              <p className="min-h-0 max-w-[22rem] overflow-hidden text-[0.82rem] leading-[1.52] text-white/58 sm:text-[0.88rem]">
                                 {item.text}
                               </p>
                             </div>
@@ -827,10 +879,10 @@ export default function Home() {
                                 prefersReducedMotion
                                   ? "transition-none"
                                   : "transition-[grid-template-rows,opacity,margin-top] duration-300 ease-out",
-                                isActive ? "mt-3 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0",
+                                isActive ? "mt-2.5 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0",
                               ].join(" ")}
                             >
-                              <p className="min-h-0 max-w-[22.5rem] overflow-hidden border-t border-white/[0.08] pt-3 text-[0.82rem] leading-[1.66] text-white/66 sm:text-[0.88rem]">
+                              <p className="min-h-0 max-w-[22.5rem] overflow-hidden border-t border-white/[0.08] pt-2.5 text-[0.78rem] leading-[1.54] text-white/66 sm:text-[0.84rem]">
                                 {item.detail}
                               </p>
                             </div>
