@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Min Xie Ng | Product Portfolio",
+  title: "Min Xie",
   description:
-    "A creative personal portfolio by Min Xie Ng, focused on product thinking, UX, and practical digital solutions.",
+    "Product-minded builder exploring people, technology, languages, and the outdoors.",
 };
 
 export default function RootLayout({

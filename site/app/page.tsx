@@ -14,6 +14,14 @@ type Project = {
   icon: string;
 };
 
+type PhotoMoment = {
+  src: string;
+  alt: string;
+  caption: string;
+  objectPosition: string;
+  liveSrc?: string;
+};
+
 const projects: Project[] = [
   {
     title: "CDC Vouchers — Exact Amount Payment UX",
@@ -44,6 +52,31 @@ const projects: Project[] = [
   },
 ];
 
+const photoMoments: PhotoMoment[] = [
+  {
+    src: "/me/journey-travel.jpg",
+    alt: "Min Xie on a slow train from Pattaya to Bangkok",
+    caption:
+      "Slow train from Pattaya to Bangkok — one of those quiet travel days where nothing happened, but a lot clicked.",
+    objectPosition: "center center",
+    liveSrc: "/me/journey-travel-live.mp4",
+  },
+  {
+    src: "/me/journey-product.jpg",
+    alt: "Min Xie presenting one of her first product pitches",
+    caption: "One of my first product pitches — nervous, curious, and learning fast.",
+    objectPosition: "center 24%",
+  },
+  {
+    src: "/me/journey-rinjani.jpg",
+    alt: "Coming down from Mount Rinjani",
+    caption:
+      "Coming down from Rinjani — the part nobody posts, but probably the part I remember most.",
+    objectPosition: "center 68%",
+    liveSrc: "/me/journey-rinjani-live.mp4",
+  },
+];
+
 const clamp = (n: number, min = 0, max = 1) => Math.min(max, Math.max(min, n));
 
 function usePrefersReducedMotion() {
@@ -60,20 +93,64 @@ function usePrefersReducedMotion() {
 
 export default function Home() {
   const photoRef = useRef<HTMLDivElement | null>(null);
+  const aboutJournalRef = useRef<HTMLDivElement | null>(null);
   const [progress, setProgress] = useState(0);
   const [mountainProgressRaw, setMountainProgressRaw] = useState(0);
+  const [aboutJournalProgress, setAboutJournalProgress] = useState(0);
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+  const [photoCycleProgress, setPhotoCycleProgress] = useState(1);
+  const [isPhotoPreviewing, setIsPhotoPreviewing] = useState(false);
+  const [activeFieldNote, setActiveFieldNote] = useState<string | null>(null);
+  const activeVideoRef = useRef<HTMLVideoElement | null>(null);
+  const activePhoto = photoMoments[activePhotoIndex];
+  const stackedPhotos = [1, 2].map((offset) => photoMoments[(activePhotoIndex + offset) % photoMoments.length]);
+
+  const stopPhotoPreview = () => {
+    setIsPhotoPreviewing(false);
+    const video = activeVideoRef.current;
+    if (video) {
+      video.pause();
+      video.currentTime = 0;
+    }
+  };
+
+  const startPhotoPreview = () => {
+    if (prefersReducedMotion) return;
+    setIsPhotoPreviewing(true);
+
+    if (activePhoto.liveSrc) {
+      void activeVideoRef.current?.play().catch(() => {
+        setIsPhotoPreviewing(false);
+      });
+    }
+  };
+
+  const showNextPhoto = () => {
+    stopPhotoPreview();
+    setPhotoCycleProgress(0);
+    setActivePhotoIndex((index) => (index + 1) % photoMoments.length);
+  };
 
   // --- language rotate (small, tasteful) ---
   const prefersReducedMotion = usePrefersReducedMotion();
   const languageLines = [
-    { lang: "EN", text: "Shaping messy ideas into clear product decisions." },
-    { lang: "中文", text: "把混乱想法变成清晰可执行的决定。" },
-    { lang: "廣東話", text: "将啲乱晒嘅想法整理成清晰可行嘅决定。" },
-    { lang: "DE", text: "Ich bringe Chaos in klare Produktentscheidungen." },
-    { lang: "ES", text: "Convierto ideas vagas en decisiones claras." },
+    {
+      lang: "EN",
+      text: "Exploring people and places, then turning ideas into clearer decisions.",
+    },
+    { lang: "中文", text: "探索不同的人与地方，再把想法整理成更清晰的决定。" },
+    { lang: "廣東話", text: "探索唔同嘅人同地方，再將諗法整理成更清晰嘅決定。" },
+    {
+      lang: "DE",
+      text: "Menschen und Orte erkunden, dann Ideen in klarere Entscheidungen verwandeln.",
+    },
+    {
+      lang: "ES",
+      text: "Explorar personas y lugares, y convertir ideas en decisiones más claras.",
+    },
     {
       lang: "MY",
-      text: "Menjadikan idea yang berserabut kepada keputusan produk yang jelas dan praktikal.",
+      text: "Meneroka orang dan tempat, kemudian menukar idea kepada keputusan yang lebih jelas.",
     },
   ];
   const [langIndex, setLangIndex] = useState(0);
@@ -85,6 +162,16 @@ export default function Home() {
     }, 2200);
     return () => window.clearInterval(t);
   }, [prefersReducedMotion]);
+
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setPhotoCycleProgress(1);
+      return;
+    }
+
+    const t = window.setTimeout(() => setPhotoCycleProgress(1), 40);
+    return () => window.clearTimeout(t);
+  }, [activePhotoIndex, prefersReducedMotion]);
 
   // Passport stamps data (make notes feel like they came from the same passport)
   const passportStamps = useMemo(
@@ -104,6 +191,7 @@ export default function Home() {
     if (prefersReducedMotion) {
       setProgress(1);
       setMountainProgressRaw(0);
+      setAboutJournalProgress(1);
       return;
     }
 
@@ -119,8 +207,18 @@ export default function Home() {
       const aboutPeak = window.innerHeight * 0.86;
       const mountainP = scrollY <= 0 ? 0 : clamp(scrollY / Math.max(aboutPeak, 1));
 
+      const journalEl = aboutJournalRef.current;
+      let journalP = 0;
+      if (journalEl) {
+        const rect = journalEl.getBoundingClientRect();
+        const start = window.innerHeight * 0.82;
+        const end = window.innerHeight * 0.34;
+        journalP = clamp((start - rect.top) / Math.max(start - end, 1));
+      }
+
       setProgress(p);
       setMountainProgressRaw(mountainP);
+      setAboutJournalProgress(journalP);
     };
 
     const onScroll = () => {
@@ -197,6 +295,16 @@ export default function Home() {
 
   const photoRevealHeight = photoBlockH ? photoBlockH * eased : 0;
 
+  const scrollCueProgress = prefersReducedMotion ? 0 : clamp(progress / 0.42);
+  const scrollCueFade = scrollCueProgress * scrollCueProgress * (3 - 2 * scrollCueProgress);
+  const scrollCueStyle: React.CSSProperties = {
+    opacity: 1 - scrollCueFade,
+    transform: `translate3d(-50%, ${scrollCueFade * 8}px, 0)`,
+    transition: prefersReducedMotion
+      ? "none"
+      : "opacity 220ms ease-out, transform 220ms ease-out",
+  };
+
   const mountainMotion = 1 - Math.pow(1 - mountainProgressRaw, 2.2);
   const mountainVisibility = mountainProgressRaw * mountainProgressRaw * (3 - 2 * mountainProgressRaw);
   const mountainSvgStyle: React.CSSProperties = {
@@ -227,6 +335,50 @@ export default function Home() {
     transition: prefersReducedMotion
       ? "none"
       : "transform 220ms ease-out, opacity 220ms ease-out",
+    willChange: prefersReducedMotion ? "auto" : "transform, opacity",
+  };
+
+  const journalReveal = prefersReducedMotion
+    ? 1
+    : aboutJournalProgress * aboutJournalProgress * (3 - 2 * aboutJournalProgress);
+  const aboutTextRevealRaw = prefersReducedMotion ? 1 : clamp((aboutJournalProgress - 0.12) / 0.88);
+  const aboutTextReveal = aboutTextRevealRaw * aboutTextRevealRaw * (3 - 2 * aboutTextRevealRaw);
+  const photoCardStyle: React.CSSProperties = {
+    opacity: 0.7 + journalReveal * 0.3,
+    transform: `translate3d(${(1 - journalReveal) * -10}px, ${(1 - journalReveal) * 26}px, 0) scale(${0.94 + journalReveal * 0.06}) rotate(${(1 - journalReveal) * -1.2}deg)`,
+    transition: prefersReducedMotion
+      ? "none"
+      : "transform 520ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 420ms ease-out",
+    willChange: prefersReducedMotion ? "auto" : "transform, opacity",
+  };
+  const photoStackBackStyle: React.CSSProperties = {
+    opacity: 0.12 + journalReveal * 0.08,
+    transform: `translate3d(${4 + journalReveal * 4}px, ${2 - journalReveal * 6}px, 0) rotate(${0.8 + journalReveal * 0.8}deg) scale(${0.965 + journalReveal * 0.012})`,
+    transition: prefersReducedMotion ? "none" : "transform 560ms ease-out, opacity 460ms ease-out",
+  };
+  const photoStackMidStyle: React.CSSProperties = {
+    opacity: 0.13 + journalReveal * 0.09,
+    transform: `translate3d(${-3 - journalReveal * 5}px, ${4 + journalReveal * 5}px, 0) rotate(${-0.7 - journalReveal * 0.9}deg) scale(${0.97 + journalReveal * 0.012})`,
+    transition: prefersReducedMotion ? "none" : "transform 560ms ease-out, opacity 460ms ease-out",
+  };
+  const isLivePreviewActive = isPhotoPreviewing && Boolean(activePhoto.liveSrc);
+  const isStillPreviewActive = isPhotoPreviewing && !activePhoto.liveSrc;
+  const activePhotoImageStyle: React.CSSProperties = {
+    opacity: (0.72 + photoCycleProgress * 0.28) * (isLivePreviewActive ? 0.16 : 1),
+    transform: `translate3d(${isStillPreviewActive ? "8px" : "0px"}, ${isStillPreviewActive ? "-6px" : "0px"}, 0) scale(${1.015 - photoCycleProgress * 0.015 + (isStillPreviewActive ? 0.06 : 0)})`,
+    transition: prefersReducedMotion ? "none" : "opacity 260ms ease-out, transform 320ms ease-out",
+  };
+  const activeVideoStyle: React.CSSProperties = {
+    opacity: isLivePreviewActive ? 1 : 0,
+    objectPosition: activePhoto.objectPosition,
+    transition: prefersReducedMotion ? "none" : "opacity 260ms ease-out",
+  };
+  const aboutNoteStyle: React.CSSProperties = {
+    opacity: 0.2 + aboutTextReveal * 0.8,
+    transform: `translate3d(${(1 - aboutTextReveal) * 18}px, ${(1 - aboutTextReveal) * 18}px, 0)`,
+    transition: prefersReducedMotion
+      ? "none"
+      : "transform 520ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 420ms ease-out",
     willChange: prefersReducedMotion ? "auto" : "transform, opacity",
   };
 
@@ -350,31 +502,36 @@ export default function Home() {
 
         {/* HERO */}
         <section className="relative flex min-h-[88svh] px-6 sm:px-8 pt-14 pb-14 sm:min-h-screen sm:pt-16 sm:pb-20">
-          <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col justify-center">
-            <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/75">
-              <span>🇸🇬</span>
-              <span>Portfolio</span>
-              <span className="text-white/30">•</span>
-              <span>Min Xie Ng</span>
-            </div>
+          <div className="pointer-events-none absolute inset-x-0 top-1/2 h-80 -translate-y-1/2 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.045),transparent_68%)]" aria-hidden />
+
+          <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center justify-center text-center">
+            <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-sm text-white/75 shadow-[0_12px_40px_rgba(0,0,0,0.18)]">
+              <span aria-hidden>🇸🇬</span>
+              <span>Hello, I’m Min Xie!</span>
+            </p>
 
             <div className="mt-8 sm:mt-10">
-              <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight">
-                Min Xie Ng
-              </h1>
-
-              <p className="mt-6 max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-6xl lg:text-7xl">
+              <h1 className="mx-auto max-w-4xl text-4xl font-semibold tracking-tight text-white sm:text-6xl lg:text-[4.6rem] lg:leading-[1.02]">
                 Curious enough to explore.
                 <br />
                 Practical enough to build.
-              </p>
+              </h1>
 
-              <p className="mt-6 max-w-2xl text-xs uppercase tracking-[0.24em] text-white/55 sm:text-sm sm:tracking-[0.28em]">
-                Information Systems · Product · Tech · Languages · Mountains · Backpacking
+              <p className="mx-auto mt-7 max-w-2xl text-xs uppercase leading-6 tracking-[0.18em] text-white/55 sm:text-sm sm:tracking-[0.22em]">
+                SMU Information Systems · Product · Tech · Languages · Mountains · Backpacking
               </p>
             </div>
 
-            <div className="mt-16 h-px w-full bg-white/10 sm:mt-24" />
+            <div className="mt-14 h-px w-full max-w-3xl bg-gradient-to-r from-transparent via-white/12 to-transparent sm:mt-20" />
+          </div>
+
+          <div
+            className="pointer-events-none absolute bottom-6 left-1/2 z-10 flex flex-col items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-white/35 sm:bottom-8"
+            style={scrollCueStyle}
+            aria-hidden
+          >
+            <span>Scroll to explore</span>
+            <span className="h-8 w-px bg-gradient-to-b from-white/35 to-transparent" aria-hidden />
           </div>
         </section>
 
@@ -403,6 +560,10 @@ export default function Home() {
               </span>
             </div>
           </div>
+
+          <p className="mt-3 text-center text-xs text-white/45">
+            People, places, and the languages between them.
+          </p>
 
           {/* ✅ Passport stamp row (now looks more like stamps) */}
           <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -436,9 +597,52 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="mt-6 sm:mt-14 grid gap-10 lg:grid-cols-12 lg:gap-12 items-start">
-            {/* Photo (collapses to avoid empty gap, then expands + rolls in) */}
-            <div className="lg:col-span-6">
+          <div
+            ref={aboutJournalRef}
+            className="relative mt-6 grid gap-7 rounded-[2rem] border border-white/10 bg-white/[0.025] p-3 shadow-[0_22px_90px_rgba(0,0,0,0.22)] sm:mt-14 lg:grid-cols-12 lg:items-start lg:p-4"
+          >
+            {/* Visual card */}
+            <div className="relative px-2 py-3 sm:px-3 sm:py-4 lg:col-span-7" style={photoCardStyle}>
+              <div
+                className="pointer-events-none absolute inset-3 overflow-hidden rounded-[1.55rem] border border-white/10 bg-white/[0.03]"
+                style={photoStackBackStyle}
+                title={stackedPhotos[1].caption}
+                aria-hidden
+              >
+                <Image
+                  src={stackedPhotos[1].src}
+                  alt=""
+                  fill
+                  className="object-cover opacity-58 saturate-[0.65] blur-[0.45px]"
+                  style={{ objectPosition: stackedPhotos[1].objectPosition }}
+                />
+                <div className="absolute inset-0 bg-[#061820]/58" />
+              </div>
+              <div
+                className="pointer-events-none absolute inset-2.5 overflow-hidden rounded-[1.55rem] border border-white/10 bg-white/[0.035]"
+                style={photoStackMidStyle}
+                title={stackedPhotos[0].caption}
+                aria-hidden
+              >
+                <Image
+                  src={stackedPhotos[0].src}
+                  alt=""
+                  fill
+                  className="object-cover opacity-62 saturate-[0.7] blur-[0.35px]"
+                  style={{ objectPosition: stackedPhotos[0].objectPosition }}
+                />
+                <div className="absolute inset-0 bg-[#061820]/54" />
+              </div>
+              <button
+                type="button"
+                onClick={showNextPhoto}
+                onMouseEnter={startPhotoPreview}
+                onMouseLeave={stopPhotoPreview}
+                onFocus={startPhotoPreview}
+                onBlur={stopPhotoPreview}
+                className="group relative block w-full rounded-[1.45rem] border border-white/10 bg-white/[0.045] p-3 text-left shadow-[0_22px_70px_rgba(0,0,0,0.28)] transition hover:border-white/18 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 lg:p-4"
+                aria-label="Show next photo moment"
+              >
               {/* Animated height wrapper */}
               <div
                 className="overflow-hidden"
@@ -455,7 +659,7 @@ export default function Home() {
                 <div ref={photoBlockInnerRef}>
                   <div
                     ref={photoRef}
-                    className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl"
+                    className="relative aspect-[16/10] w-full overflow-hidden rounded-3xl"
                     style={photoRollStyle}
                   >
                     {/* “rolled edge” overlay for extra 3D depth */}
@@ -476,43 +680,166 @@ export default function Home() {
                     <div className="paper-texture pointer-events-none absolute inset-0" />
 
                     <Image
-                      src="/me/profile.jpg"
-                      alt="Min Xie Ng"
+                      key={activePhoto.src}
+                      src={activePhoto.src}
+                      alt={activePhoto.alt}
                       fill
                       priority
                       className="object-cover"
+                      style={{ ...activePhotoImageStyle, objectPosition: activePhoto.objectPosition }}
                     />
+
+                    {activePhoto.liveSrc ? (
+                      <video
+                        key={activePhoto.liveSrc}
+                        ref={activeVideoRef}
+                        src={activePhoto.liveSrc}
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                        className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+                        style={activeVideoStyle}
+                        aria-hidden
+                      />
+                    ) : null}
 
                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/30" />
                   </div>
 
                   {/* Caption */}
-                  <p className="mt-3 max-w-md text-xs text-white/50 italic leading-relaxed">
-                    Took the slow train from Pattaya to Bangkok during a solo backpacking trip —
-                    June 2025. One of those days where nothing happened, but a lot clicked.
-                  </p>
+                  <div className="mt-3 flex flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                    <p className="max-w-md text-xs text-white/50 italic leading-relaxed">
+                      {activePhoto.caption}
+                    </p>
+                    <span
+                      className={[
+                        "inline-flex shrink-0 items-center rounded-full border border-white/12 bg-white/[0.055] px-3 py-1.5 text-[10px] uppercase tracking-[0.18em] text-white/58 shadow-[0_10px_30px_rgba(0,0,0,0.18)] transition group-hover:border-white/20 group-hover:bg-white/[0.08] group-hover:text-white/75",
+                        prefersReducedMotion ? "" : "photo-cue-attention",
+                      ].join(" ")}
+                    >
+                      3 moments · tap to explore
+                    </span>
+                  </div>
                 </div>
               </div>
+            </button>
             </div>
 
-            {/* Text */}
-            <div className="lg:col-span-6 lg:pt-4">
-              <h3 className="text-xl sm:text-2xl font-semibold text-white leading-snug">
-                I like taking messy ideas and shaping them into something clear and usable.
-              </h3>
+            {/* Text note */}
+            <div
+              className="flex h-[30.5rem] self-center rounded-[1.55rem] border border-white/[0.08] bg-white/[0.032] p-4 shadow-[0_18px_52px_rgba(0,0,0,0.14)] sm:h-[29.5rem] sm:p-5 lg:col-span-5 lg:h-auto lg:self-stretch lg:p-6 xl:p-7"
+              style={aboutNoteStyle}
+            >
+              <div className="flex h-full w-full max-w-[29rem] flex-col">
+                <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
+                  <p className="text-[0.62rem] font-semibold uppercase leading-none tracking-[0.26em] text-white/38">
+                    FIELD NOTE 01
+                  </p>
+                  <span className="h-1.5 w-1.5 rounded-full bg-white/30" aria-hidden />
+                </div>
 
-              <div className="mt-6 space-y-6 text-white/85 leading-7">
-                <p>
-                  I’m interested in how technology, business, and people come together in real
-                  products. I enjoy asking questions, connecting dots across different
-                  perspectives, and turning vague thoughts into decisions that actually go somewhere.
-                </p>
+                <div className="mt-4 flex min-h-0 flex-1 flex-col gap-2.5">
+                  {[
+                    {
+                      index: "01",
+                      title: "Explore",
+                      accent: "↗",
+                      text: "Following curiosity through places, languages, and unfamiliar paths.",
+                      detail:
+                        "I follow curiosity through unfamiliar places, languages, and paths because they help me see problems from more than one angle.",
+                    },
+                    {
+                      index: "02",
+                      title: "Connect",
+                      accent: "⟡",
+                      text: "Understanding people, context, and the small details behind decisions.",
+                      detail:
+                        "I pay attention to how people behave in real contexts — what they say, what they skip, and what actually shapes their decisions.",
+                    },
+                    {
+                      index: "03",
+                      title: "Build",
+                      accent: "→",
+                      text: "Turning observations into clearer product decisions and practical solutions.",
+                      detail:
+                        "I like turning those observations into clearer product decisions, practical flows, and solutions that feel usable in real life.",
+                    },
+                  ].map((item) => {
+                    const currentFieldNote = activeFieldNote ?? "Explore";
+                    const isActive = currentFieldNote === item.title;
 
-                <p className="text-white/75">
-                  When I’m not studying or building, I’m usually hiking, planning my next trip, or
-                  juggling conversations in multiple languages, mostly out of curiosity and
-                  sometimes just for fun.
-                </p>
+                    return (
+                      <button
+                        key={item.title}
+                        type="button"
+                        onClick={() => setActiveFieldNote(item.title)}
+                        onMouseEnter={() => setActiveFieldNote(item.title)}
+                        onFocus={() => setActiveFieldNote(item.title)}
+                        className={[
+                          "group block w-full rounded-2xl border px-4 text-left outline-none sm:px-5",
+                          prefersReducedMotion
+                            ? "transition-none"
+                            : "transition-[flex,background-color,border-color,opacity,padding,box-shadow] duration-300 ease-out",
+                          isActive
+                            ? "flex-[1_1_auto] border-white/[0.14] bg-white/[0.052] py-4 shadow-[0_14px_42px_rgba(0,0,0,0.13)]"
+                            : "flex-[0_0_4.15rem] border-white/[0.075] bg-white/[0.028] py-3 opacity-68 sm:flex-[0_0_4.05rem]",
+                          "hover:border-white/[0.12] hover:bg-white/[0.045] focus-visible:ring-2 focus-visible:ring-white/24",
+                        ].join(" ")}
+                        aria-expanded={isActive}
+                      >
+                        <div className="flex h-full items-start gap-3.5 overflow-hidden">
+                          <span className="mt-1 text-[0.62rem] font-semibold leading-none tracking-[0.18em] text-white/30">
+                            {item.index}
+                          </span>
+                          <div className="flex min-w-0 flex-1 flex-col">
+                            <div className="flex items-center justify-between gap-3">
+                              <h3 className="text-[1.05rem] font-semibold leading-none tracking-[-0.025em] text-white/90 sm:text-[1.12rem]">
+                                {item.title}
+                              </h3>
+                              <span
+                                className={[
+                                  "text-[0.72rem] leading-none text-white/34",
+                                  prefersReducedMotion ? "transition-none" : "transition-opacity duration-300 ease-out",
+                                  isActive ? "opacity-100" : "opacity-45",
+                                ].join(" ")}
+                                aria-hidden
+                              >
+                                {item.accent}
+                              </span>
+                            </div>
+                            <div
+                              className={[
+                                "grid overflow-hidden",
+                                prefersReducedMotion
+                                  ? "transition-none"
+                                  : "transition-[grid-template-rows,opacity,margin-top] duration-300 ease-out",
+                                isActive ? "mt-2 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0",
+                              ].join(" ")}
+                            >
+                              <p className="min-h-0 max-w-[22rem] overflow-hidden text-[0.86rem] leading-[1.62] text-white/58 sm:text-[0.92rem]">
+                                {item.text}
+                              </p>
+                            </div>
+                            <div
+                              className={[
+                                "grid overflow-hidden",
+                                prefersReducedMotion
+                                  ? "transition-none"
+                                  : "transition-[grid-template-rows,opacity,margin-top] duration-300 ease-out",
+                                isActive ? "mt-3 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0",
+                              ].join(" ")}
+                            >
+                              <p className="min-h-0 max-w-[22.5rem] overflow-hidden border-t border-white/[0.08] pt-3 text-[0.82rem] leading-[1.66] text-white/66 sm:text-[0.88rem]">
+                                {item.detail}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
@@ -613,7 +940,7 @@ export default function Home() {
       {/* FOOTER */}
       <section className="px-6 sm:px-8 py-10">
         <div className="max-w-6xl mx-auto">
-          <p className="text-xs text-white/40">© {new Date().getFullYear()} Min Xie Ng</p>
+          <p className="text-xs text-white/40">© {new Date().getFullYear()} Min Xie</p>
         </div>
       </section>
 
@@ -680,6 +1007,29 @@ export default function Home() {
 
         .stamp-dot {
           opacity: 0.35;
+        }
+
+        .photo-cue-attention {
+          animation: photo-cue-attention 4.8s ease-in-out 1.2s infinite;
+          transform-origin: center;
+          will-change: transform;
+        }
+
+        @keyframes photo-cue-attention {
+          0%,
+          78%,
+          100% {
+            transform: translateY(0) rotate(0deg) scale(1);
+          }
+          82% {
+            transform: translateY(-2px) rotate(-0.6deg) scale(1.015);
+          }
+          86% {
+            transform: translateY(1px) rotate(0.45deg) scale(0.995);
+          }
+          90% {
+            transform: translateY(-1px) rotate(-0.25deg) scale(1.006);
+          }
         }
 
         /* --- Photo “passport page” texture + roll edge --- */
