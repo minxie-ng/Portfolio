@@ -104,6 +104,22 @@ export default function Home() {
   const activeVideoRef = useRef<HTMLVideoElement | null>(null);
   const activePhoto = photoMoments[activePhotoIndex];
   const stackedPhotos = [1, 2].map((offset) => photoMoments[(activePhotoIndex + offset) % photoMoments.length]);
+  const projectDeck = projects.map((project, index) => ({
+    ...project,
+    number: `0${index + 1}`,
+    line:
+      index === 0
+        ? "Exact-amount voucher payments for clearer checkout decisions."
+        : index === 1
+          ? "A dating flow concept shaped around clarity and trust."
+          : "Campus food ordering flows built around everyday constraints.",
+    type:
+      index === 0
+        ? "Payment UX"
+        : index === 1
+          ? "Product concept"
+          : "Campus systems",
+  }));
 
   const stopPhotoPreview = () => {
     setIsPhotoPreviewing(false);
@@ -903,48 +919,71 @@ export default function Home() {
       </div>
 
       {/* PROJECTS */}
-      <section className="px-6 sm:px-8 py-8 sm:py-0">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-semibold text-white">Projects</h2>
+      <section className="overflow-x-hidden px-6 py-12 sm:px-8 sm:py-16">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/38">
+                Selected work
+              </p>
+              <h2 className="mt-3 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                Product case gallery
+              </h2>
+            </div>
+            <p className="max-w-md text-sm leading-6 text-white/58">
+              A horizontal rail of product cases — swipe or scroll to explore.
+            </p>
+          </div>
 
-          <p className="mt-3 text-white/70 max-w-2xl leading-7">
-            Visual, scrollable case studies — focused on product decisions, user flows, and practical
-            constraints.
-          </p>
+          <div className="project-gallery-rail relative mt-3 -mx-6 overflow-x-auto overflow-y-visible overscroll-x-contain scroll-smooth px-6 pb-7 pt-7 sm:-mx-8 sm:px-8">
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 hidden w-20 bg-gradient-to-r from-[#061820] to-transparent lg:block" aria-hidden />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 hidden w-20 bg-gradient-to-l from-[#061820] to-transparent lg:block" aria-hidden />
+            <div className="project-gallery-track flex w-max snap-x snap-mandatory gap-4 sm:gap-5">
+              {projectDeck.map((project) => (
+                  <Link
+                    key={project.href}
+                    href={project.href}
+                    className="group relative flex min-h-[20rem] w-[18.5rem] shrink-0 snap-start scroll-ml-6 flex-col overflow-hidden rounded-[1.65rem] border border-white/[0.09] bg-[#0b2028]/88 p-5 text-left shadow-[0_24px_70px_rgba(0,0,0,0.28)] outline-none backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:rotate-[-0.8deg] hover:border-white/18 hover:bg-[#0d2630]/94 hover:shadow-[0_30px_90px_rgba(0,0,0,0.36)] focus-visible:-translate-y-1 focus-visible:border-white/22 focus-visible:ring-2 focus-visible:ring-white/28 sm:w-[22rem] sm:p-6 lg:w-[24rem]"
+                  >
+                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(159,231,191,0.1),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.06),transparent_44%)]" aria-hidden />
+                    <svg
+                      className="pointer-events-none absolute bottom-0 right-0 h-40 w-full text-white opacity-[0.08] transition duration-300 group-hover:opacity-[0.13]"
+                      viewBox="0 0 520 180"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <path d="M18 132 C92 104 132 112 188 76 C246 38 284 74 326 60 C374 44 410 30 500 40" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                      <path d="M92 140 L160 92 L220 136 L284 72 L352 142 L418 92" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2">
-            {projects.map((p) => (
-              <Link
-                key={p.href}
-                href={p.href}
-                className={[
-                  "group relative rounded-2xl border border-white/10 bg-white/5 p-6",
-                  "transition will-change-transform",
-                  "hover:-translate-y-1 hover:bg-white/[0.08] hover:shadow-[0_14px_60px_rgba(0,0,0,0.45)]",
-                  "active:scale-[0.99]",
-                  "focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30",
-                ].join(" ")}
-              >
-                <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.06] to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-
-                <div className="relative flex items-start justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{p.icon}</span>
-                      <p className="text-xs uppercase tracking-wide text-white/55">{p.subtitle}</p>
+                    <div className="relative flex items-start justify-between gap-4">
+                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/40">
+                        Case {project.number}
+                      </p>
+                      <span className="rounded-full border border-white/10 bg-white/[0.045] px-3 py-1 text-[0.62rem] uppercase tracking-[0.16em] text-white/52">
+                        {project.type}
+                      </span>
                     </div>
 
-                    <h3 className="mt-2 text-lg font-semibold text-white">{p.title}</h3>
-                  </div>
-                </div>
+                    <h3 className="relative mt-9 max-w-[18rem] text-2xl font-semibold tracking-[-0.04em] text-white sm:text-[1.9rem] sm:leading-[1.05]">
+                      {project.title}
+                    </h3>
 
-                <p className="relative mt-4 text-sm text-white/70 leading-6">{p.description}</p>
+                    <p className="relative mt-4 max-w-[20rem] text-sm leading-6 text-white/62">
+                      {project.line}
+                    </p>
 
-                <p className="relative mt-4 text-xs font-semibold text-white/55 transition-transform duration-300 ease-out group-hover:translate-x-0.5">
-                  Tap to preview →
-                </p>
-              </Link>
-            ))}
+                    <div className="relative mt-auto flex items-end justify-between gap-4 pt-8">
+                      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white/34">
+                        {project.subtitle}
+                      </span>
+                      <span className="shrink-0 translate-y-0 rounded-full border border-white/14 bg-white/[0.06] px-4 py-2 text-xs font-semibold text-white/68 opacity-100 transition duration-300 sm:translate-y-1 sm:border-transparent sm:bg-transparent sm:text-white/0 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:border-white/14 sm:group-hover:bg-white/[0.06] sm:group-hover:text-white/78 sm:group-hover:opacity-100 sm:group-focus-visible:translate-y-0 sm:group-focus-visible:border-white/14 sm:group-focus-visible:bg-white/[0.06] sm:group-focus-visible:text-white/78 sm:group-focus-visible:opacity-100">
+                        View case study
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+            </div>
           </div>
         </div>
       </section>
@@ -1116,6 +1155,25 @@ export default function Home() {
             inset 0 -10px 18px rgba(0, 0, 0, 0.22),
             inset 0 6px 14px rgba(255, 255, 255, 0.08);
           border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .project-gallery-rail {
+          scrollbar-width: none;
+        }
+
+        .project-gallery-rail::-webkit-scrollbar {
+          display: none;
+        }
+
+        .project-gallery-track {
+          transform: translate3d(0, 0, 0);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .project-gallery-track,
+          .project-gallery-track * {
+            scroll-behavior: auto;
+          }
         }
       `}</style>
     </main>
