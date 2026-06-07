@@ -1,6 +1,7 @@
 // /projects/cdc/page.tsx
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 
 export default function CDCProject() {
@@ -487,12 +488,12 @@ export default function CDCProject() {
               Next project: CMB Concept <span aria-hidden>→</span>
             </a>
           
-            <a
+            <Link
               href="/"
               className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-medium text-white/70 transition hover:bg-white/10 hover:text-white"
             >
               Back to home <span aria-hidden>→</span>
-            </a>
+            </Link>
           </div>
 
           <p className="mt-10 text-xs text-white/40">

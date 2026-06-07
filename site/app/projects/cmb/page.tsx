@@ -1,6 +1,7 @@
 // /site/app/projects/cmb/page.tsx
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 type SolutionId = "rapid-fire" | "question-cards" | "two-truths" | "ai-wingman";
@@ -723,12 +724,12 @@ export default function CMBProject() {
               Next project: SMU Food App <span aria-hidden>→</span>
             </a>
             
-            <a
+            <Link
               href="/"
               className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium text-white/60 transition hover:bg-white/10 hover:text-white active:scale-[0.99]"
             >
               Back to home <span aria-hidden>→</span>
-            </a>
+            </Link>
           </div>
 
           <p className="mt-10 text-xs text-white/45">

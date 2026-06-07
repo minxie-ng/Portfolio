@@ -1,6 +1,7 @@
 // /app/projects/smufoodapp/page.tsx
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export default function SMUFoodAppProject() {
@@ -238,12 +239,12 @@ export default function SMUFoodAppProject() {
                 Jump to user flow <span aria-hidden>→</span>
               </a>
 
-              <a
+              <Link
                 href="/"
                 className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium text-white/55 transition hover:bg-white/10 hover:text-white active:scale-[0.99]"
               >
                 Back to home <span aria-hidden>→</span>
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -799,12 +800,12 @@ export default function SMUFoodAppProject() {
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <a
+              <Link
                 href="/"
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-medium text-white/80 transition hover:bg-white/10 active:scale-[0.99]"
               >
                 Back to home <span aria-hidden>→</span>
-              </a>
+              </Link>
 
               <a
                 href="#top"

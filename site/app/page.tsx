@@ -997,7 +997,7 @@ export default function Home() {
 
           <p className="mt-3 max-w-2xl text-white/70 leading-7">
             If you’d like to chat about product, projects, travel stories, or just say hi, feel free
-            to reach out ! :"D
+            to reach out ! :&quot;D
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
