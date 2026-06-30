@@ -91,6 +91,24 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
+function useIsTouchMobile() {
+  const [isTouchMobile, setIsTouchMobile] = useState(false);
+
+  useEffect(() => {
+    const queries = [window.matchMedia("(max-width: 767px)"), window.matchMedia("(pointer: coarse)")];
+    const update = () => setIsTouchMobile(queries.some((query) => query.matches));
+
+    update();
+    queries.forEach((query) => query.addEventListener?.("change", update));
+
+    return () => {
+      queries.forEach((query) => query.removeEventListener?.("change", update));
+    };
+  }, []);
+
+  return isTouchMobile;
+}
+
 export default function Home() {
   const photoRef = useRef<HTMLDivElement | null>(null);
   const aboutJournalRef = useRef<HTMLDivElement | null>(null);
@@ -149,6 +167,7 @@ export default function Home() {
 
   // --- language rotate (small, tasteful) ---
   const prefersReducedMotion = usePrefersReducedMotion();
+  const isTouchMobile = useIsTouchMobile();
   const languageLines = useMemo(
     () => [
       {
@@ -263,28 +282,35 @@ export default function Home() {
   const roll = prefersReducedMotion ? 1 : progress;
   const eased = roll * roll * (3 - 2 * roll);
 
+  // Mobile browsers can keep scroll/resize-driven reveals in an intermediate state.
+  // Keep the richer page-roll animation on desktop, but make the photo/video media
+  // fully visible by default on phones and coarse-touch devices.
+  const mediaReveal = prefersReducedMotion || isTouchMobile ? 1 : eased;
+
   // “page” transform (soften + less rigid)
-  const rotateX = -86 * (1 - eased); // deg
-  const rotateZ = -1.2 * (1 - eased); // tiny twist
-  const translateY = 22 * (1 - eased); // px
-  const scaleY = 0.92 + 0.08 * eased; // starts slightly compressed
-  const blur = 0.9 * (1 - eased);
-  const shadowA = 0.34 * (1 - eased);
+  const rotateX = -86 * (1 - mediaReveal); // deg
+  const rotateZ = -1.2 * (1 - mediaReveal); // tiny twist
+  const translateY = 22 * (1 - mediaReveal); // px
+  const scaleY = 0.92 + 0.08 * mediaReveal; // starts slightly compressed
+  const blur = 0.9 * (1 - mediaReveal);
+  const shadowA = 0.34 * (1 - mediaReveal);
 
   const photoRollStyle: React.CSSProperties = {
-    opacity: eased,
+    opacity: mediaReveal,
     transform: `perspective(1100px) rotateX(${rotateX}deg) rotateZ(${rotateZ}deg) translateY(${translateY}px) scaleY(${scaleY})`,
     transformOrigin: "top center",
     filter: `blur(${blur}px)`,
     boxShadow: `0 30px 110px rgba(0,0,0,${shadowA})`,
     transition:
-      "transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 180ms ease-out, filter 220ms ease-out, box-shadow 220ms ease-out",
-    willChange: "transform, opacity, filter",
+      prefersReducedMotion || isTouchMobile
+        ? "none"
+        : "transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 180ms ease-out, filter 220ms ease-out, box-shadow 220ms ease-out",
+    willChange: prefersReducedMotion || isTouchMobile ? "auto" : "transform, opacity, filter",
     backfaceVisibility: "hidden",
   };
 
   // Keep this var name if referenced elsewhere
-  const photoOpacity = eased;
+  const photoOpacity = mediaReveal;
 
   // --- ✨ Layout “wow” (no awkward gap on mobile) ---
   const photoBlockInnerRef = useRef<HTMLDivElement | null>(null);
@@ -312,7 +338,7 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const photoRevealHeight = photoBlockH ? photoBlockH * eased : 0;
+  const photoRevealHeight = photoBlockH ? photoBlockH * mediaReveal : 0;
 
   const scrollCueProgress = prefersReducedMotion ? 0 : clamp(progress / 0.42);
   const scrollCueFade = scrollCueProgress * scrollCueProgress * (3 - 2 * scrollCueProgress);
@@ -382,18 +408,18 @@ export default function Home() {
     willChange: prefersReducedMotion ? "auto" : "transform, opacity",
   };
 
-  const journalReveal = prefersReducedMotion
+  const journalReveal = prefersReducedMotion || isTouchMobile
     ? 1
     : aboutJournalProgress * aboutJournalProgress * (3 - 2 * aboutJournalProgress);
-  const aboutTextRevealRaw = prefersReducedMotion ? 1 : clamp((aboutJournalProgress - 0.12) / 0.88);
+  const aboutTextRevealRaw = prefersReducedMotion || isTouchMobile ? 1 : clamp((aboutJournalProgress - 0.12) / 0.88);
   const aboutTextReveal = aboutTextRevealRaw * aboutTextRevealRaw * (3 - 2 * aboutTextRevealRaw);
   const photoCardStyle: React.CSSProperties = {
     opacity: 0.7 + journalReveal * 0.3,
     transform: `translate3d(${(1 - journalReveal) * -10}px, ${(1 - journalReveal) * 26}px, 0) scale(${0.94 + journalReveal * 0.06}) rotate(${(1 - journalReveal) * -1.2}deg)`,
-    transition: prefersReducedMotion
+    transition: prefersReducedMotion || isTouchMobile
       ? "none"
       : "transform 520ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 420ms ease-out",
-    willChange: prefersReducedMotion ? "auto" : "transform, opacity",
+    willChange: prefersReducedMotion || isTouchMobile ? "auto" : "transform, opacity",
   };
   const photoStackBackStyle: React.CSSProperties = {
     opacity: 0.12 + journalReveal * 0.08,
@@ -719,10 +745,10 @@ export default function Home() {
                 className="overflow-hidden"
                 style={{
                   height: photoRevealHeight,
-                  transition: prefersReducedMotion
+                  transition: prefersReducedMotion || isTouchMobile
                     ? "none"
                     : "height 560ms cubic-bezier(0.2, 0.92, 0.2, 1)",
-                  willChange: "height",
+                  willChange: prefersReducedMotion || isTouchMobile ? "auto" : "height",
                 }}
                 aria-hidden={photoOpacity === 0}
               >
@@ -737,10 +763,10 @@ export default function Home() {
                     <div
                       className="roll-edge pointer-events-none absolute inset-x-0 top-0"
                       style={{
-                        height: `${Math.max(0, 46 * (1 - eased))}px`,
-                        opacity: Math.max(0, 1 - eased),
-                        transform: `perspective(900px) rotateX(${92 - 92 * eased}deg) translateY(${
-                          -10 * (1 - eased)
+                        height: `${Math.max(0, 46 * (1 - mediaReveal))}px`,
+                        opacity: Math.max(0, 1 - mediaReveal),
+                        transform: `perspective(900px) rotateX(${92 - 92 * mediaReveal}deg) translateY(${
+                          -10 * (1 - mediaReveal)
                         }px)`,
                         transformOrigin: "top center",
                       }}
