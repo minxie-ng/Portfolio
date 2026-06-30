@@ -165,6 +165,15 @@ export default function Home() {
     setActivePhotoIndex((index) => (index + 1) % photoMoments.length);
   };
 
+  const handlePhotoAction = () => {
+    if (isTouchMobile && activePhoto.liveSrc && !isPhotoPreviewing) {
+      startPhotoPreview();
+      return;
+    }
+
+    showNextPhoto();
+  };
+
   // --- language rotate (small, tasteful) ---
   const prefersReducedMotion = usePrefersReducedMotion();
   const isTouchMobile = useIsTouchMobile();
@@ -282,10 +291,11 @@ export default function Home() {
   const roll = prefersReducedMotion ? 1 : progress;
   const eased = roll * roll * (3 - 2 * roll);
 
-  // Mobile browsers can keep scroll/resize-driven reveals in an intermediate state.
-  // Keep the richer page-roll animation on desktop, but make the photo/video media
-  // fully visible by default on phones and coarse-touch devices.
-  const mediaReveal = prefersReducedMotion || isTouchMobile ? 1 : eased;
+  // Mobile uses the journal intersection progress, so it still fades in as you scroll.
+  // Desktop keeps the original hero-scroll page-roll reveal unchanged.
+  const mobileMediaRevealRaw = clamp((aboutJournalProgress - 0.04) / 0.72);
+  const mobileMediaReveal = mobileMediaRevealRaw * mobileMediaRevealRaw * (3 - 2 * mobileMediaRevealRaw);
+  const mediaReveal = prefersReducedMotion ? 1 : isTouchMobile ? mobileMediaReveal : eased;
 
   // “page” transform (soften + less rigid)
   const rotateX = -86 * (1 - mediaReveal); // deg
@@ -408,10 +418,16 @@ export default function Home() {
     willChange: prefersReducedMotion ? "auto" : "transform, opacity",
   };
 
-  const journalReveal = prefersReducedMotion || isTouchMobile
+  const journalReveal = prefersReducedMotion
     ? 1
-    : aboutJournalProgress * aboutJournalProgress * (3 - 2 * aboutJournalProgress);
-  const aboutTextRevealRaw = prefersReducedMotion || isTouchMobile ? 1 : clamp((aboutJournalProgress - 0.12) / 0.88);
+    : isTouchMobile
+      ? mobileMediaReveal
+      : aboutJournalProgress * aboutJournalProgress * (3 - 2 * aboutJournalProgress);
+  const aboutTextRevealRaw = prefersReducedMotion
+    ? 1
+    : isTouchMobile
+      ? mobileMediaReveal
+      : clamp((aboutJournalProgress - 0.12) / 0.88);
   const aboutTextReveal = aboutTextRevealRaw * aboutTextRevealRaw * (3 - 2 * aboutTextRevealRaw);
   const photoCardStyle: React.CSSProperties = {
     opacity: 0.7 + journalReveal * 0.3,
@@ -732,11 +748,11 @@ export default function Home() {
               </div>
               <button
                 type="button"
-                onClick={showNextPhoto}
-                onMouseEnter={startPhotoPreview}
-                onMouseLeave={stopPhotoPreview}
-                onFocus={startPhotoPreview}
-                onBlur={stopPhotoPreview}
+                onClick={handlePhotoAction}
+                onMouseEnter={isTouchMobile ? undefined : startPhotoPreview}
+                onMouseLeave={isTouchMobile ? undefined : stopPhotoPreview}
+                onFocus={isTouchMobile ? undefined : startPhotoPreview}
+                onBlur={isTouchMobile ? undefined : stopPhotoPreview}
                 className="group relative flex min-h-[25rem] w-full flex-col rounded-[1.45rem] border border-white/10 bg-white/[0.045] p-3 text-left shadow-[0_22px_70px_rgba(0,0,0,0.28)] transition hover:border-white/18 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 sm:min-h-[24.5rem] lg:min-h-0 lg:p-4"
                 aria-label="Show next photo moment"
               >
