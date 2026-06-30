@@ -63,7 +63,7 @@ const photoMoments: PhotoMoment[] = [
   },
   {
     src: "/me/journey-product.jpg",
-    alt: "Min Xie presenting one of her first product pitches",
+    alt: "Min Xie presenting an early product pitch",
     caption: "One of my first product pitches — nervous, curious, and learning fast.",
     objectPosition: "center 24%",
   },
@@ -149,26 +149,29 @@ export default function Home() {
 
   // --- language rotate (small, tasteful) ---
   const prefersReducedMotion = usePrefersReducedMotion();
-  const languageLines = [
-    {
-      lang: "EN",
-      text: "Exploring people and places, then turning ideas into clearer decisions.",
-    },
-    { lang: "中文", text: "探索不同的人与地方，再把想法整理成更清晰的决定。" },
-    { lang: "廣東話", text: "探索唔同嘅人同地方，再將諗法整理成更清晰嘅決定。" },
-    {
-      lang: "DE",
-      text: "Menschen und Orte erkunden, dann Ideen in klarere Entscheidungen verwandeln.",
-    },
-    {
-      lang: "ES",
-      text: "Explorar personas y lugares, y convertir ideas en decisiones más claras.",
-    },
-    {
-      lang: "MY",
-      text: "Meneroka orang dan tempat, kemudian menukar idea kepada keputusan yang lebih jelas.",
-    },
-  ];
+  const languageLines = useMemo(
+    () => [
+      {
+        lang: "EN",
+        text: "Exploring people and places, then turning ideas into clearer decisions.",
+      },
+      { lang: "中文", text: "探索不同的人与地方，再把想法整理成更清晰的决定。" },
+      { lang: "廣東話", text: "探索唔同嘅人同地方，再將諗法整理成更清晰嘅決定。" },
+      {
+        lang: "DE",
+        text: "Menschen und Orte erkunden, dann Ideen in klarere Entscheidungen verwandeln.",
+      },
+      {
+        lang: "ES",
+        text: "Explorar personas y lugares, y convertir ideas en decisiones más claras.",
+      },
+      {
+        lang: "MY",
+        text: "Meneroka orang dan tempat, kemudian menukar idea kepada keputusan yang lebih jelas.",
+      },
+    ],
+    []
+  );
   const [langIndex, setLangIndex] = useState(0);
 
   useEffect(() => {
@@ -177,7 +180,7 @@ export default function Home() {
       setLangIndex((i) => (i + 1) % languageLines.length);
     }, 2200);
     return () => window.clearInterval(t);
-  }, [prefersReducedMotion]);
+  }, [prefersReducedMotion, languageLines.length]);
 
   useEffect(() => {
     if (prefersReducedMotion) {
@@ -993,11 +996,11 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <div className="h-px w-full bg-white/10 mb-10" />
 
-          <h2 className="text-2xl sm:text-3xl font-semibold text-white">Let’s connect !</h2>
+          <h2 className="text-2xl sm:text-3xl font-semibold text-white">Let’s connect!</h2>
 
           <p className="mt-3 max-w-2xl text-white/70 leading-7">
             If you’d like to chat about product, projects, travel stories, or just say hi, feel free
-            to reach out ! :&quot;D
+            to reach out :&quot;)
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">

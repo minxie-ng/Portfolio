@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 type SolutionId = "rapid-fire" | "question-cards" | "two-truths" | "ai-wingman";
@@ -586,12 +587,14 @@ export default function CMBProject() {
           </div>
 
           <div className="p-4">
-            <div className="mx-auto h-[70vh] w-full">
+            <div className="mx-auto relative h-[70vh] w-full">
               {openSolution ? (
-                <img
+                <Image
                   src={gifBySolution[openSolution].src}
                   alt={`${gifBySolution[openSolution].title} preview`}
-                  className="h-full w-full object-contain"
+                  fill
+                  unoptimized
+                  className="object-contain"
                   draggable={false}
                 />
               ) : null}
