@@ -118,6 +118,7 @@ export default function Home() {
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [photoCycleProgress, setPhotoCycleProgress] = useState(1);
   const [isPhotoPreviewing, setIsPhotoPreviewing] = useState(false);
+  const [isMobileMediaVisible, setIsMobileMediaVisible] = useState(false);
   const [activeFieldNote, setActiveFieldNote] = useState<string | null>(null);
   const activeVideoRef = useRef<HTMLVideoElement | null>(null);
   const activePhoto = photoMoments[activePhotoIndex];
@@ -287,14 +288,33 @@ export default function Home() {
     };
   }, [prefersReducedMotion]);
 
+  useEffect(() => {
+    if (!isTouchMobile || prefersReducedMotion) {
+      setIsMobileMediaVisible(false);
+      return;
+    }
+
+    const el = aboutJournalRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setIsMobileMediaVisible(true);
+      },
+      { root: null, threshold: 0.18, rootMargin: "0px 0px -12% 0px" }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isTouchMobile, prefersReducedMotion]);
+
   // smoothstep easing
   const roll = prefersReducedMotion ? 1 : progress;
   const eased = roll * roll * (3 - 2 * roll);
 
-  // Mobile uses the journal intersection progress, so it still fades in as you scroll.
+  // Mobile keeps the media block at real height, then fades it in once the section enters view.
   // Desktop keeps the original hero-scroll page-roll reveal unchanged.
-  const mobileMediaRevealRaw = clamp((aboutJournalProgress - 0.04) / 0.72);
-  const mobileMediaReveal = mobileMediaRevealRaw * mobileMediaRevealRaw * (3 - 2 * mobileMediaRevealRaw);
+  const mobileMediaReveal = isMobileMediaVisible ? 1 : 0;
   const mediaReveal = prefersReducedMotion ? 1 : isTouchMobile ? mobileMediaReveal : eased;
 
   // “page” transform (soften + less rigid)
@@ -311,11 +331,12 @@ export default function Home() {
     transformOrigin: "top center",
     filter: `blur(${blur}px)`,
     boxShadow: `0 30px 110px rgba(0,0,0,${shadowA})`,
-    transition:
-      prefersReducedMotion || isTouchMobile
-        ? "none"
+    transition: prefersReducedMotion
+      ? "none"
+      : isTouchMobile
+        ? "opacity 520ms ease-out, transform 520ms cubic-bezier(0.2, 0.9, 0.2, 1), filter 520ms ease-out"
         : "transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 180ms ease-out, filter 220ms ease-out, box-shadow 220ms ease-out",
-    willChange: prefersReducedMotion || isTouchMobile ? "auto" : "transform, opacity, filter",
+    willChange: prefersReducedMotion ? "auto" : "transform, opacity, filter",
     backfaceVisibility: "hidden",
   };
 
@@ -349,6 +370,17 @@ export default function Home() {
   }, []);
 
   const photoRevealHeight = photoBlockH ? photoBlockH * mediaReveal : 0;
+  const photoRevealContainerStyle: React.CSSProperties = isTouchMobile
+    ? {
+        height: "auto",
+        overflow: "hidden",
+      }
+    : {
+        height: photoRevealHeight,
+        overflow: "hidden",
+        transition: prefersReducedMotion ? "none" : "height 560ms cubic-bezier(0.2, 0.92, 0.2, 1)",
+        willChange: "height",
+      };
 
   const scrollCueProgress = prefersReducedMotion ? 0 : clamp(progress / 0.42);
   const scrollCueFade = scrollCueProgress * scrollCueProgress * (3 - 2 * scrollCueProgress);
@@ -758,14 +790,7 @@ export default function Home() {
               >
               {/* Animated image reveal */}
               <div
-                className="overflow-hidden"
-                style={{
-                  height: photoRevealHeight,
-                  transition: prefersReducedMotion || isTouchMobile
-                    ? "none"
-                    : "height 560ms cubic-bezier(0.2, 0.92, 0.2, 1)",
-                  willChange: prefersReducedMotion || isTouchMobile ? "auto" : "height",
-                }}
+                style={photoRevealContainerStyle}
                 aria-hidden={photoOpacity === 0}
               >
                 {/* Actual image area measured at full size */}
