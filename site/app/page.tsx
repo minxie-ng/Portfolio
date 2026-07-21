@@ -160,6 +160,7 @@ export default function Home() {
   const [mountainProgressRaw, setMountainProgressRaw] = useState(0);
   const [aboutJournalProgress, setAboutJournalProgress] = useState(0);
   const [isExperienceVisible, setIsExperienceVisible] = useState(false);
+  const [activeExperienceIndex, setActiveExperienceIndex] = useState<number | null>(null);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [photoCycleProgress, setPhotoCycleProgress] = useState(1);
   const [isPhotoPreviewing, setIsPhotoPreviewing] = useState(false);
@@ -1163,71 +1164,122 @@ export default function Home() {
       >
         <div className="mx-auto max-w-6xl">
           <div className="border-b border-white/10 pb-8">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#9fe7bf]/70">
-                Experience
-              </p>
-              <h2
-                id="experience-heading"
-                className="mt-3 max-w-2xl text-2xl font-semibold tracking-[-0.035em] text-white sm:text-4xl"
-              >
-                Where I&apos;ve contributed, learned, and led.
-              </h2>
-            </div>
+            <h2
+              id="experience-heading"
+              className="text-2xl font-semibold tracking-[-0.035em] text-white sm:text-3xl"
+            >
+              Experience
+            </h2>
           </div>
 
-          <ol className="mt-10 sm:mt-12">
-            {experiences.map((experience, index) => (
-              <li
-                key={`${experience.organisation}-${experience.role}`}
-                className="relative grid grid-cols-[1.25rem_minmax(0,1fr)] gap-x-4 pb-10 last:pb-0 sm:grid-cols-[10rem_1.5rem_minmax(0,1fr)] sm:gap-x-6 sm:pb-12"
-                style={{
-                  opacity: isExperienceVisible ? 1 : 0,
-                  transform: `translate3d(0, ${isExperienceVisible ? 0 : 18}px, 0)`,
-                  transition: prefersReducedMotion
-                    ? "none"
-                    : `opacity 520ms ease-out ${index * 90}ms, transform 560ms cubic-bezier(0.2, 0.9, 0.2, 1) ${index * 90}ms`,
-                }}
-              >
-                <div className="col-start-2 row-start-1 mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white/38 sm:col-start-1 sm:mb-0 sm:block sm:pt-0.5 sm:text-right">
-                  <span className="block">{experience.period}</span>
-                  <span className="text-white/20 sm:hidden" aria-hidden>
-                    ·
-                  </span>
-                  <span className="block sm:mt-2">{experience.location}</span>
-                </div>
+          <ol className="mt-8 sm:mt-10">
+            {experiences.map((experience, index) => {
+              const isActive = activeExperienceIndex === index;
+              const detailsId = `experience-details-${index}`;
 
-                <div
-                  className="relative col-start-1 row-span-2 row-start-1 flex justify-center sm:col-start-2"
-                  aria-hidden
+              return (
+                <li
+                  key={`${experience.organisation}-${experience.role}`}
+                  className="pb-6 last:pb-0 sm:pb-7"
+                  style={{
+                    opacity: isExperienceVisible ? 1 : 0,
+                    transform: `translate3d(0, ${isExperienceVisible ? 0 : 18}px, 0)`,
+                    transition: prefersReducedMotion
+                      ? "none"
+                      : `opacity 520ms ease-out ${index * 90}ms, transform 560ms cubic-bezier(0.2, 0.9, 0.2, 1) ${index * 90}ms`,
+                  }}
                 >
-                  {index < experiences.length - 1 ? (
-                    <span
-                      className="absolute left-1/2 top-3 h-[calc(100%+2.5rem)] w-px origin-top -translate-x-1/2 bg-gradient-to-b from-[#9fe7bf]/45 via-white/14 to-white/5 sm:h-[calc(100%+3rem)]"
-                      style={{
-                        transform: `translateX(-50%) scaleY(${isExperienceVisible ? 1 : 0})`,
-                        transition: prefersReducedMotion
-                          ? "none"
-                          : `transform 620ms ease-out ${120 + index * 90}ms`,
-                      }}
-                    />
-                  ) : null}
-                  <span className="relative z-10 mt-1 h-3 w-3 rounded-full border border-[#9fe7bf]/65 bg-[#061820] shadow-[0_0_0_5px_rgba(159,231,191,0.06),0_0_22px_rgba(159,231,191,0.18)]" />
-                </div>
+                  <button
+                    type="button"
+                    data-experience-index={index}
+                    aria-expanded={isActive}
+                    aria-controls={detailsId}
+                    className="group grid w-full grid-cols-[1.25rem_minmax(0,1fr)] gap-x-4 rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-[#9fe7bf]/40 focus-visible:ring-offset-4 focus-visible:ring-offset-[#061820] sm:grid-cols-[10rem_1.5rem_minmax(0,1fr)] sm:gap-x-6"
+                    onClick={() => {
+                      if (!isTouchMobile) return;
+                      setActiveExperienceIndex((current) => (current === index ? null : index));
+                    }}
+                    onMouseEnter={() => {
+                      if (!isTouchMobile) setActiveExperienceIndex(index);
+                    }}
+                    onMouseLeave={() => {
+                      if (!isTouchMobile) {
+                        const focusedIndex =
+                          document.activeElement instanceof HTMLElement
+                            ? document.activeElement.dataset.experienceIndex
+                            : undefined;
 
-                <article className="col-start-2 row-start-2 min-w-0 sm:col-start-3 sm:row-start-1">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9fe7bf]/66">
-                    {experience.organisation}
-                  </p>
-                  <h3 className="mt-2 text-xl font-semibold tracking-[-0.025em] text-white/92 sm:text-2xl">
-                    {experience.role}
-                  </h3>
-                  <p className="mt-3 max-w-2xl text-sm leading-6 text-white/58 sm:text-[0.95rem] sm:leading-7">
-                    {experience.summary}
-                  </p>
-                </article>
-              </li>
-            ))}
+                        setActiveExperienceIndex(
+                          focusedIndex === undefined ? null : Number(focusedIndex),
+                        );
+                      }
+                    }}
+                    onFocus={() => {
+                      if (!isTouchMobile) setActiveExperienceIndex(index);
+                    }}
+                    onBlur={() => {
+                      setActiveExperienceIndex((current) => (current === index ? null : current));
+                    }}
+                  >
+                    <div className="col-start-2 row-start-1 mb-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white/38 sm:col-start-1 sm:mb-0 sm:pt-0.5 sm:text-right">
+                      {experience.period}
+                    </div>
+
+                    <div
+                      className="relative col-start-1 row-span-2 row-start-1 flex justify-center sm:col-start-2"
+                      aria-hidden
+                    >
+                      {index < experiences.length - 1 ? (
+                        <span
+                          className="absolute left-1/2 top-3 h-[calc(100%+1.5rem)] w-px origin-top -translate-x-1/2 bg-gradient-to-b from-[#9fe7bf]/45 via-white/14 to-white/5 sm:h-[calc(100%+1.75rem)]"
+                          style={{
+                            transform: `translateX(-50%) scaleY(${isExperienceVisible ? 1 : 0})`,
+                            transition: prefersReducedMotion
+                              ? "none"
+                              : `transform 620ms ease-out ${120 + index * 90}ms`,
+                          }}
+                        />
+                      ) : null}
+                      <span
+                        className={`relative z-10 mt-1 h-3 w-3 rounded-full border border-[#9fe7bf]/65 bg-[#061820] shadow-[0_0_0_5px_rgba(159,231,191,0.06),0_0_22px_rgba(159,231,191,0.18)] group-hover:scale-110 group-focus-visible:scale-110 ${
+                          prefersReducedMotion ? "" : "transition-transform duration-200"
+                        }`}
+                      />
+                    </div>
+
+                    <div className="col-start-2 row-start-2 min-w-0 sm:col-start-3 sm:row-start-1">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9fe7bf]/66">
+                        {experience.organisation}
+                      </p>
+                      <h3 className="mt-1.5 text-lg font-semibold tracking-[-0.025em] text-white/92 sm:text-xl">
+                        {experience.role}
+                      </h3>
+                      <div
+                        id={detailsId}
+                        aria-hidden={!isActive}
+                        className={`grid overflow-hidden ${
+                          isActive ? "mt-3 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0"
+                        }`}
+                        style={{
+                          transition: prefersReducedMotion
+                            ? "none"
+                            : "grid-template-rows 260ms ease, opacity 220ms ease, margin-top 260ms ease",
+                        }}
+                      >
+                        <div className="min-h-0 overflow-hidden">
+                          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white/38">
+                            {experience.location}
+                          </p>
+                          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58 sm:text-[0.95rem] sm:leading-7">
+                            {experience.summary}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
           </ol>
 
           <div className="mt-14 h-px w-full bg-white/10 sm:mt-20" />
