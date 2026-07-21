@@ -915,7 +915,10 @@ export default function Home() {
             className="relative mt-6 grid gap-7 rounded-[2rem] border border-white/10 bg-white/[0.025] p-3 shadow-[0_22px_90px_rgba(0,0,0,0.22)] sm:mt-14 lg:grid-cols-12 lg:items-start lg:p-4"
           >
             {/* Visual card */}
-            <div className="relative flex px-2 py-3 sm:px-3 sm:py-4 lg:col-span-7 lg:self-start" style={photoCardStyle}>
+            <div
+              className="relative flex px-2 py-3 sm:px-3 sm:py-4 lg:col-span-6 lg:self-start"
+              style={photoCardStyle}
+            >
               <div
                 className="pointer-events-none absolute inset-3 overflow-hidden rounded-[1.55rem] border border-white/10 bg-white/[0.03]"
                 style={photoStackBackStyle}
@@ -962,7 +965,10 @@ export default function Home() {
                 aria-hidden={photoOpacity === 0}
               >
                 {/* Actual image area measured at full size */}
-                <div ref={photoBlockInnerRef} className="h-[20.5rem] sm:h-[20rem] lg:h-[20.75rem]">
+                <div
+                  ref={photoBlockInnerRef}
+                  className="h-[20.5rem] sm:h-[20rem] lg:aspect-[4/3] lg:h-auto"
+                >
                   <div
                     ref={photoRef}
                     className="relative h-full w-full overflow-hidden rounded-3xl"
@@ -1034,7 +1040,7 @@ export default function Home() {
 
             {/* Text note */}
             <div
-              className="flex h-[24.75rem] self-center rounded-[1.55rem] border border-white/[0.08] bg-white/[0.032] p-3.5 shadow-[0_18px_52px_rgba(0,0,0,0.14)] sm:h-[24.5rem] sm:p-4 lg:col-span-5 lg:mt-4 lg:h-[25rem] lg:self-start lg:p-4 xl:p-5"
+              className="flex h-[24.75rem] self-center rounded-[1.55rem] border border-white/[0.08] bg-white/[0.032] p-3.5 shadow-[0_18px_52px_rgba(0,0,0,0.14)] sm:h-[24.5rem] sm:p-4 lg:col-span-6 lg:mt-4 lg:h-[25rem] lg:self-start lg:p-4 xl:p-5"
               style={aboutNoteStyle}
             >
               <div className="flex h-full w-full max-w-[29rem] flex-col">
