@@ -8,10 +8,7 @@ Add a concise experience section to Min Xie's portfolio homepage that communicat
 
 The section will sit between **About Me** and **Selected Work**. This creates a clear narrative: personal perspective, evidence of contribution, then detailed project cases.
 
-The section header will use:
-
-- Eyebrow: `Experience`
-- Heading: `Where I've contributed, learned, and led.`
+The section header will use only the heading `Experience`. Remove the supporting headline and descriptive sentence so the timeline carries the section.
 
 ## Content
 
@@ -55,27 +52,41 @@ Store the entries in a typed `experiences` data array near the existing homepage
 Desktop layout:
 
 - Section header above the timeline.
-- A slim left metadata column for date and location.
+- A slim left metadata column for the date.
 - A central route line and stop marker.
-- A flexible right column for role, organisation, and one-line summary.
+- A flexible right column for organisation and role.
+- Location and summary remain collapsed until the row is active.
 
 Mobile layout:
 
 - Collapse to one vertical column.
 - Keep the route line on the left.
-- Place date and location above each role.
-- Allow summaries to wrap naturally without horizontal scrolling.
+- Place the date above each role.
+- Reveal location and summary below the role when its row is tapped.
+- Allow expanded summaries to wrap naturally without horizontal scrolling.
 
 ## Interaction and motion
 
-Use one restrained reveal for the section: the route and entries appear progressively as the section enters the viewport. Do not add hover-dependent information or per-card effects.
+Use one restrained reveal for the section: the route and entries appear progressively as the section enters the viewport.
 
-When `prefers-reduced-motion: reduce` is active, render the complete section immediately with no animated transition. All content must remain available without JavaScript-driven motion.
+Each timeline row behaves as a compact one-at-a-time accordion:
+
+- Default state: show only date, organisation, and role.
+- Desktop pointer: reveal location and summary while the row is hovered; collapse it when the pointer leaves.
+- Keyboard: focusing a row reveals it, and moving focus away collapses it.
+- Mobile/touch: tapping a row expands it; tapping a different row switches the active entry; tapping the active row again may collapse it.
+- Only one entry may be expanded at once.
+- The entire row is the control. Do not add a separate “View details” label or button.
+- Animate the detail region with a short height/opacity transition. Reduced-motion users receive the same state changes without animation.
+
+When `prefers-reduced-motion: reduce` is active, render the timeline immediately with no entry or accordion animation. Detail regions remain collapsed until their row is activated.
 
 ## Accessibility
 
 - Use a semantic `<section>` with a labelled heading.
 - Render the experience list with list semantics.
+- Make each row a semantic button with `aria-expanded` and an `aria-controls` relationship to its detail region.
+- Keep location and summary in the DOM while collapsed so assistive technology can associate the controlled content correctly.
 - Keep the route line and stop markers decorative and hidden from assistive technology.
 - Maintain readable contrast for role titles, metadata, and summaries.
 - Do not rely on color or motion to convey entry order.
@@ -87,6 +98,9 @@ The section is static and has no external data dependency. If a field is intenti
 ## Verification
 
 - Confirm all four entries, dates, locations, and summaries render in the agreed order.
+- Confirm all entries are collapsed initially.
+- Confirm hover and keyboard focus reveal only one desktop entry at a time.
+- Confirm tap expands, switches, and collapses entries on mobile.
 - Verify the desktop and mobile timeline layouts at representative breakpoints.
 - Verify no horizontal overflow is introduced.
 - Verify reduced-motion behavior.
@@ -97,6 +111,6 @@ The section is static and has no external data dependency. If a field is intenti
 
 - A dedicated résumé or experience detail page.
 - Company logos or external company links.
-- Expandable responsibility lists.
+- Multi-bullet responsibility lists.
 - Additional LinkedIn roles.
 - Changes to the existing About, Projects, Contact, or pointer-atmosphere behavior.
