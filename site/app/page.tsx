@@ -1162,7 +1162,7 @@ export default function Home() {
         className="overflow-hidden px-6 py-14 sm:px-8 sm:py-20"
       >
         <div className="mx-auto max-w-6xl">
-          <div className="grid gap-5 border-b border-white/10 pb-8 sm:grid-cols-[minmax(0,1fr)_minmax(16rem,24rem)] sm:items-end">
+          <div className="border-b border-white/10 pb-8">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#9fe7bf]/70">
                 Experience
@@ -1174,9 +1174,6 @@ export default function Home() {
                 Where I&apos;ve contributed, learned, and led.
               </h2>
             </div>
-            <p className="max-w-md text-sm leading-6 text-white/55 sm:justify-self-end">
-              Product work, programme support, and student leadership across Singapore and Hangzhou.
-            </p>
           </div>
 
           <ol className="mt-10 sm:mt-12">
