@@ -22,6 +22,49 @@ type PhotoMoment = {
   liveSrc?: string;
 };
 
+type Experience = {
+  role: string;
+  organisation: string;
+  period: string;
+  location: string;
+  summary: string;
+};
+
+const experiences: Experience[] = [
+  {
+    role: "AI Product Operations Intern",
+    organisation: "TigerSec",
+    period: "May 2026 — Present",
+    location: "Hangzhou",
+    summary:
+      "Supporting AI agents, product workflows, content operations, and user guidance.",
+  },
+  {
+    role: "Student Assistant",
+    organisation: "SMU Academy",
+    period: "Jan 2026 — Present",
+    location: "Singapore",
+    summary:
+      "Supporting the delivery of professional learning programmes and learner operations.",
+  },
+  {
+    role: "Trekking President",
+    organisation: "SMUXploration Crew",
+    period: "Jan 2026 — Present",
+    location: "Singapore",
+    summary:
+      "Revived the club's first overseas expedition in six years, serving as OIC while leading logistics, safety planning, and the student team.",
+  },
+  {
+    role: "Event Executive",
+    organisation: "SMU Product Club",
+    period: "Jan 2026 — Present",
+    location: "Singapore",
+    summary:
+      "Creating product events that connect students with practitioners and industry teams.",
+  },
+];
+
 const projects: Project[] = [
   {
     title: "CDC Vouchers — Exact Amount Payment UX",
@@ -112,9 +155,12 @@ function useIsTouchMobile() {
 export default function Home() {
   const photoRef = useRef<HTMLDivElement | null>(null);
   const aboutJournalRef = useRef<HTMLDivElement | null>(null);
+  const experienceRef = useRef<HTMLElement | null>(null);
   const [progress, setProgress] = useState(0);
   const [mountainProgressRaw, setMountainProgressRaw] = useState(0);
   const [aboutJournalProgress, setAboutJournalProgress] = useState(0);
+  const [isExperienceVisible, setIsExperienceVisible] = useState(false);
+  const [activeExperienceIndex, setActiveExperienceIndex] = useState<number | null>(null);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [photoCycleProgress, setPhotoCycleProgress] = useState(1);
   const [isPhotoPreviewing, setIsPhotoPreviewing] = useState(false);
@@ -210,6 +256,28 @@ export default function Home() {
     }, 2200);
     return () => window.clearInterval(t);
   }, [prefersReducedMotion, languageLines.length]);
+
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setIsExperienceVisible(true);
+      return;
+    }
+
+    const section = experienceRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setIsExperienceVisible(true);
+        observer.disconnect();
+      },
+      { threshold: 0.18 }
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [prefersReducedMotion]);
 
   useEffect(() => {
     if (prefersReducedMotion) {
@@ -500,59 +568,159 @@ export default function Home() {
     willChange: prefersReducedMotion ? "auto" : "transform, opacity",
   };
 
-  // --- Ultra-subtle cursor glow (follows pointer) ---
+  // --- Ultra-subtle desktop pointer atmosphere ---
   const glowRef = useRef<HTMLDivElement | null>(null);
+  const pointerTraceRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
     if (prefersReducedMotion) return;
 
     const el = glowRef.current;
-    if (!el) return;
+    const canvas = pointerTraceRef.current;
+    if (!el || !canvas) return;
+
+    const canUsePointerTrace =
+      window.matchMedia("(hover: hover)").matches && window.matchMedia("(pointer: fine)").matches;
+    if (!canUsePointerTrace) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    type TracePoint = { x: number; y: number; life: number };
 
     let raf = 0;
+    let fadeTimer = 0;
+    let isMoving = false;
+    let points: TracePoint[] = [];
 
-    const move = (e: MouseEvent) => {
-      if (raf) return;
-      raf = window.requestAnimationFrame(() => {
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(window.innerWidth * dpr);
+      canvas.height = Math.round(window.innerHeight * dpr);
+      canvas.style.width = "100vw";
+      canvas.style.height = "100vh";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    const draw = () => {
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      points = points
+        .map((point) => ({ ...point, life: point.life - 0.045 }))
+        .filter((point) => point.life > 0);
+
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+
+      for (let i = 1; i < points.length - 1; i += 1) {
+        const from = points[i - 1];
+        const current = points[i];
+        const to = points[i + 1];
+        const progressThroughTrail = i / Math.max(points.length - 1, 1);
+        const alpha = Math.min(from.life, current.life, to.life) * (0.07 + progressThroughTrail * 0.11);
+        const endX = (current.x + to.x) / 2;
+        const endY = (current.y + to.y) / 2;
+
+        ctx.beginPath();
+        ctx.moveTo((from.x + current.x) / 2, (from.y + current.y) / 2);
+        ctx.quadraticCurveTo(current.x, current.y, endX, endY);
+        ctx.lineWidth = 0.55 + progressThroughTrail * 1.85;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = `rgba(226, 255, 241, ${alpha})`;
+        ctx.shadowBlur = 22;
+        ctx.shadowColor = "rgba(184, 255, 218, 0.16)";
+        ctx.stroke();
+      }
+
+      const latest = points[points.length - 1];
+      if (latest) {
+        const glow = ctx.createRadialGradient(latest.x, latest.y, 0, latest.x, latest.y, 28);
+        glow.addColorStop(0, `rgba(242, 255, 249, ${latest.life * 0.12})`);
+        glow.addColorStop(0.42, `rgba(178, 255, 218, ${latest.life * 0.06})`);
+        glow.addColorStop(1, "rgba(178, 255, 218, 0)");
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(latest.x, latest.y, 28, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+
+      if (isMoving || points.length > 0) {
+        raf = window.requestAnimationFrame(draw);
+      } else {
         raf = 0;
-        el.style.setProperty("--x", `${e.clientX}px`);
-        el.style.setProperty("--y", `${e.clientY}px`);
-        el.style.setProperty("--o", `1`);
-      });
+      }
+    };
+
+    const move = (e: PointerEvent) => {
+      if (e.pointerType && e.pointerType !== "mouse") return;
+
+      el.style.setProperty("--x", `${e.clientX}px`);
+      el.style.setProperty("--y", `${e.clientY}px`);
+      el.style.setProperty("--o", "1");
+
+      const last = points[points.length - 1];
+      if (!last || Math.hypot(e.clientX - last.x, e.clientY - last.y) > 2) {
+        points.push({ x: e.clientX, y: e.clientY, life: 1 });
+      }
+      points = points.slice(-22);
+      isMoving = true;
+
+      window.clearTimeout(fadeTimer);
+      fadeTimer = window.setTimeout(() => {
+        isMoving = false;
+        el.style.setProperty("--o", "0");
+      }, 110);
+
+      if (!raf) raf = window.requestAnimationFrame(draw);
     };
 
     const leave = () => {
-      el.style.setProperty("--o", `0`);
+      isMoving = false;
+      points = [];
+      el.style.setProperty("--o", "0");
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     };
 
-    window.addEventListener("mousemove", move, { passive: true });
-
-    document.addEventListener("mouseout", (e) => {
+    const onDocumentMouseOut = (e: MouseEvent) => {
       if (!(e.relatedTarget as Node | null)) leave();
-    });
+    };
 
+    resize();
+    el.style.setProperty("--o", "0");
+
+    window.addEventListener("pointermove", move, { passive: true });
+    window.addEventListener("resize", resize);
     window.addEventListener("blur", leave);
-
-    el.style.setProperty("--o", `0`);
+    document.addEventListener("mouseout", onDocumentMouseOut);
 
     return () => {
-      window.removeEventListener("mousemove", move);
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("resize", resize);
       window.removeEventListener("blur", leave);
+      document.removeEventListener("mouseout", onDocumentMouseOut);
+      window.clearTimeout(fadeTimer);
       if (raf) window.cancelAnimationFrame(raf);
     };
   }, [prefersReducedMotion]);
 
   return (
     <main className="min-h-screen bg-[#061820] text-white">
-      {/* ultra-subtle cursor glow */}
+      {/* ultra-subtle desktop pointer atmosphere */}
+      <canvas
+        ref={pointerTraceRef}
+        className="pointer-events-none fixed inset-0 z-[70] hidden sm:block"
+        aria-hidden
+      />
       <div
         ref={glowRef}
-        className="pointer-events-none fixed inset-0 -z-10"
+        className="pointer-events-none fixed inset-0 z-[69] hidden sm:block"
         style={{
           opacity: "var(--o, 0)",
           transition: "opacity 280ms ease-out",
           background:
-            "radial-gradient(520px circle at var(--x, 50%) var(--y, 30%), rgba(255,255,255,0.08), transparent 62%)",
+            "radial-gradient(520px circle at var(--x, 50%) var(--y, 30%), rgba(205,255,229,0.032), transparent 68%)",
         }}
         aria-hidden
       />
@@ -987,6 +1155,136 @@ export default function Home() {
         </div>
         </section>
       </div>
+
+      {/* EXPERIENCE */}
+      <section
+        ref={experienceRef}
+        aria-labelledby="experience-heading"
+        className="overflow-hidden px-6 py-14 sm:px-8 sm:py-20"
+      >
+        <div className="mx-auto max-w-6xl">
+          <div className="border-b border-white/10 pb-8">
+            <h2
+              id="experience-heading"
+              className="text-2xl font-semibold tracking-[-0.035em] text-white sm:text-3xl"
+            >
+              Experience
+            </h2>
+          </div>
+
+          <ol className="mt-8 sm:mt-10">
+            {experiences.map((experience, index) => {
+              const isActive = activeExperienceIndex === index;
+              const detailsId = `experience-details-${index}`;
+
+              return (
+                <li
+                  key={`${experience.organisation}-${experience.role}`}
+                  className="pb-6 last:pb-0 sm:pb-7"
+                  style={{
+                    opacity: isExperienceVisible ? 1 : 0,
+                    transform: `translate3d(0, ${isExperienceVisible ? 0 : 18}px, 0)`,
+                    transition: prefersReducedMotion
+                      ? "none"
+                      : `opacity 520ms ease-out ${index * 90}ms, transform 560ms cubic-bezier(0.2, 0.9, 0.2, 1) ${index * 90}ms`,
+                  }}
+                >
+                  <button
+                    type="button"
+                    data-experience-index={index}
+                    aria-expanded={isActive}
+                    aria-controls={detailsId}
+                    className="group grid w-full grid-cols-[1.25rem_minmax(0,1fr)] gap-x-4 rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-[#9fe7bf]/40 focus-visible:ring-offset-4 focus-visible:ring-offset-[#061820] sm:grid-cols-[10rem_1.5rem_minmax(0,1fr)] sm:gap-x-6"
+                    onClick={() => {
+                      if (!isTouchMobile) return;
+                      setActiveExperienceIndex((current) => (current === index ? null : index));
+                    }}
+                    onMouseEnter={() => {
+                      if (!isTouchMobile) setActiveExperienceIndex(index);
+                    }}
+                    onMouseLeave={() => {
+                      if (!isTouchMobile) {
+                        const focusedIndex =
+                          document.activeElement instanceof HTMLElement
+                            ? document.activeElement.dataset.experienceIndex
+                            : undefined;
+
+                        setActiveExperienceIndex(
+                          focusedIndex === undefined ? null : Number(focusedIndex),
+                        );
+                      }
+                    }}
+                    onFocus={() => {
+                      if (!isTouchMobile) setActiveExperienceIndex(index);
+                    }}
+                    onBlur={() => {
+                      setActiveExperienceIndex((current) => (current === index ? null : current));
+                    }}
+                  >
+                    <div className="col-start-2 row-start-1 mb-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white/38 sm:col-start-1 sm:mb-0 sm:pt-0.5 sm:text-right">
+                      {experience.period}
+                    </div>
+
+                    <div
+                      className="relative col-start-1 row-span-2 row-start-1 flex justify-center sm:col-start-2"
+                      aria-hidden
+                    >
+                      {index < experiences.length - 1 ? (
+                        <span
+                          className="absolute left-1/2 top-3 h-[calc(100%+1.5rem)] w-px origin-top -translate-x-1/2 bg-gradient-to-b from-[#9fe7bf]/45 via-white/14 to-white/5 sm:h-[calc(100%+1.75rem)]"
+                          style={{
+                            transform: `translateX(-50%) scaleY(${isExperienceVisible ? 1 : 0})`,
+                            transition: prefersReducedMotion
+                              ? "none"
+                              : `transform 620ms ease-out ${120 + index * 90}ms`,
+                          }}
+                        />
+                      ) : null}
+                      <span
+                        className={`relative z-10 mt-1 h-3 w-3 rounded-full border border-[#9fe7bf]/65 bg-[#061820] shadow-[0_0_0_5px_rgba(159,231,191,0.06),0_0_22px_rgba(159,231,191,0.18)] group-hover:scale-110 group-focus-visible:scale-110 ${
+                          prefersReducedMotion ? "" : "transition-transform duration-200"
+                        }`}
+                      />
+                    </div>
+
+                    <div className="col-start-2 row-start-2 min-w-0 sm:col-start-3 sm:row-start-1">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9fe7bf]/66">
+                        {experience.organisation}
+                      </p>
+                      <h3 className="mt-1.5 text-lg font-semibold tracking-[-0.025em] text-white/92 sm:text-xl">
+                        {experience.role}
+                      </h3>
+                      <div
+                        id={detailsId}
+                        aria-hidden={!isActive}
+                        className={`grid overflow-hidden ${
+                          isActive ? "mt-3 grid-rows-[1fr] opacity-100" : "mt-0 grid-rows-[0fr] opacity-0"
+                        }`}
+                        style={{
+                          transition: prefersReducedMotion
+                            ? "none"
+                            : "grid-template-rows 260ms ease, opacity 220ms ease, margin-top 260ms ease",
+                        }}
+                      >
+                        <div className="min-h-0 overflow-hidden">
+                          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white/38">
+                            {experience.location}
+                          </p>
+                          <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58 sm:text-[0.95rem] sm:leading-7">
+                            {experience.summary}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+
+          <div className="mt-14 h-px w-full bg-white/10 sm:mt-20" />
+        </div>
+      </section>
 
       {/* PROJECTS */}
       <section className="overflow-x-hidden px-6 py-12 sm:px-8 sm:py-16">
