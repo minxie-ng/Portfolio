@@ -333,3 +333,86 @@ git commit -m "Add experience trail to portfolio homepage"
 ```
 
 Expected: the diff includes the user's pre-existing pointer-atmosphere work plus the experience feature; the commit succeeds only after confirming that including the full current `page.tsx` diff is intended. If the pointer work must remain uncommitted separately, stop before staging and ask the user how they want the shared-file changes committed.
+
+### Task 5: Refine the trail into a compact accessible accordion
+
+**Files:**
+- Modify: `site/app/page.tsx`
+
+- [ ] **Step 1: Add a failing source assertion for the approved interaction contract**
+
+Run from the repository root:
+
+```bash
+node -e "const fs=require('fs'); const source=fs.readFileSync('site/app/page.tsx','utf8'); const ok=!source.includes('Where I&apos;ve contributed, learned, and led.') && source.includes('activeExperienceIndex') && source.includes('aria-expanded={isActive}') && source.includes('experience-details-'); if(!ok) process.exit(1);"
+```
+
+Expected: exit `1` because the old headline remains and the accordion state and accessibility attributes do not exist yet.
+
+- [ ] **Step 2: Add one-at-a-time expansion state**
+
+Add this state beside the existing Experience visibility state:
+
+```tsx
+const [activeExperienceIndex, setActiveExperienceIndex] = useState<number | null>(null);
+```
+
+- [ ] **Step 3: Replace the section heading and expanded entries**
+
+Replace the eyebrow plus headline with one semantic `h2` containing `Experience`. For each experience, render a full-row `button` with:
+
+- `aria-expanded={isActive}` and `aria-controls={`experience-details-${index}`}`;
+- the date, organisation, and role always visible;
+- the location and summary inside the controlled details element;
+- `onMouseEnter` and `onMouseLeave` expansion for fine-pointer desktop;
+- `onFocus` and `onBlur` expansion for keyboard users;
+- `onClick` toggling for touch/mobile users;
+- the shared `activeExperienceIndex` so opening one row closes every other row.
+
+Animate the details with `grid-template-rows`, opacity, and margin. Use `transition-none` when `prefersReducedMotion` is true. Keep the existing route marker, staged section entrance, and responsive metadata layout.
+
+- [ ] **Step 4: Make the source assertion pass**
+
+Re-run the Step 1 command.
+
+Expected: exit `0`.
+
+- [ ] **Step 5: Run static verification**
+
+Run:
+
+```bash
+git diff --check
+cd site && npm run lint && npm run build
+```
+
+Expected: all commands exit `0`.
+
+### Task 6: Verify accordion behavior and update the pull request
+
+- [ ] **Step 1: Verify desktop behavior at `1440x900`**
+
+Confirm every row starts collapsed; hovering or focusing a row reveals only that row's location and summary; moving to another row switches the open entry; leaving or blurring collapses it; the heading contains only `Experience`; and there is no horizontal overflow.
+
+- [ ] **Step 2: Verify mobile behavior at `390x844`**
+
+Confirm tapping a row opens it, tapping another closes the first and opens the second, and tapping the active row closes it. Confirm the route and wrapped text do not overlap.
+
+- [ ] **Step 3: Verify reduced motion**
+
+Emulate `prefers-reduced-motion: reduce` and confirm detail expansion has no transition while remaining functional.
+
+- [ ] **Step 4: Review, commit, push, and fast-forward local main**
+
+Run:
+
+```bash
+git diff --check
+git diff -- site/app/page.tsx
+git add site/app/page.tsx docs/superpowers/plans/2026-07-21-experience-section.md
+git commit -m "Make experience trail entries expandable"
+git push origin codex/experience-section
+git -C ../.. merge --ff-only codex/experience-section
+```
+
+Expected: pull request #1 updates with the refined experience interaction, and local `main` points at the same commit without rewriting history.
