@@ -34,6 +34,9 @@ coverage/
 # Local Git worktrees
 .worktrees/
 
+# Local design-companion sessions
+.superpowers/
+
 # Logs
 npm-debug.log*
 yarn-debug.log*
