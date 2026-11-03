@@ -12,6 +12,9 @@ type Project = {
   href: string;
   tags: string[];
   icon: string;
+  type: string;
+  cover: string;
+  line: string;
 };
 
 type PhotoMoment = {
@@ -34,7 +37,7 @@ const experiences: Experience[] = [
   {
     role: "AI Product Operations Intern",
     organisation: "TigerSec",
-    period: "May 2026 — Present",
+    period: "May 2026 — Aug 2026",
     location: "Hangzhou",
     summary:
       "Supporting AI agents, product workflows, content operations, and user guidance.",
@@ -67,6 +70,18 @@ const experiences: Experience[] = [
 
 const projects: Project[] = [
   {
+    title: "TrustKaki",
+    subtitle: "AI Lodge Hackathon Winner",
+    description:
+      "AI-assisted senior check-ins that help care teams spot wellbeing changes and follow up with supporting evidence.",
+    href: "/projects/trustkaki",
+    tags: ["AI Agents", "Personal Memory", "Care Coordination"],
+    icon: "🤝",
+    cover: "/projects/trustkaki/care-workspace.png",
+    line: "AI-assisted senior check-ins that turn everyday conversations into clearer care follow-ups.",
+    type: "AI / Care coordination",
+  },
+  {
     title: "CDC Vouchers — Exact Amount Payment UX",
     subtitle: "Product / UX Case Study",
     description:
@@ -74,6 +89,9 @@ const projects: Project[] = [
     href: "/projects/cdc",
     tags: ["Product Thinking", "UX Flow", "Edge Cases", "Constraints"],
     icon: "🧾",
+    type: "Payment UX",
+    cover: "/projects/cdc/cover.svg",
+    line: "Exact-amount voucher payments for clearer checkout decisions.",
   },
   {
     title: "CMB Dating App Concept",
@@ -83,6 +101,9 @@ const projects: Project[] = [
     href: "/projects/cmb",
     tags: ["Product Spec", "UX", "Experiment Ideas"],
     icon: "💬",
+    type: "Product concept",
+    cover: "/projects/cmb/cover.jpg",
+    line: "A dating flow concept shaped around clarity and trust.",
   },
   {
     title: "SMU App Project",
@@ -92,6 +113,9 @@ const projects: Project[] = [
     href: "/projects/smufoodapp",
     tags: ["Scope", "User Flow", "Prioritisation"],
     icon: "🏫",
+    type: "Campus systems",
+    cover: "/projects/smufoodapp/cover.jpg",
+    line: "Campus food ordering flows built around everyday constraints.",
   },
 ];
 
@@ -105,10 +129,10 @@ const photoMoments: PhotoMoment[] = [
     liveSrc: "/me/journey-travel-live.mp4",
   },
   {
-    src: "/me/journey-product.jpg",
-    alt: "Min Xie presenting an early product pitch",
-    caption: "One of my first product pitches — nervous, curious, and learning fast.",
-    objectPosition: "center 24%",
+    src: "/me/journey-ai-lodge.jpg",
+    alt: "Min Xie speaking at the AI Lodge hackathon",
+    caption: "Pitching at the AI Lodge hackathon and taking home the win.",
+    objectPosition: "60% center",
   },
   {
     src: "/me/journey-rinjani.jpg",
@@ -172,18 +196,6 @@ export default function Home() {
   const projectDeck = projects.map((project, index) => ({
     ...project,
     number: `0${index + 1}`,
-    line:
-      index === 0
-        ? "Exact-amount voucher payments for clearer checkout decisions."
-        : index === 1
-          ? "A dating flow concept shaped around clarity and trust."
-          : "Campus food ordering flows built around everyday constraints.",
-    type:
-      index === 0
-        ? "Payment UX"
-        : index === 1
-          ? "Product concept"
-          : "Campus systems",
   }));
 
   const stopPhotoPreview = () => {
@@ -1310,28 +1322,27 @@ export default function Home() {
           </div>
 
           <div className="project-gallery-rail relative mt-3 -mx-6 overflow-x-auto overflow-y-visible overscroll-x-contain scroll-smooth px-6 pb-7 pt-7 sm:-mx-8 sm:px-8">
-            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 hidden w-20 bg-gradient-to-r from-[#061820] to-transparent lg:block" aria-hidden />
-            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 hidden w-20 bg-gradient-to-l from-[#061820] to-transparent lg:block" aria-hidden />
             <div className="project-gallery-track flex w-max snap-x snap-mandatory gap-4 sm:gap-5">
               {projectDeck.map((project) => (
                   <Link
                     key={project.href}
                     href={project.href}
+                    target={project.href.startsWith("https://") ? "_blank" : undefined}
+                    rel={project.href.startsWith("https://") ? "noopener noreferrer" : undefined}
                     className="group relative flex min-h-[20rem] w-[18.5rem] shrink-0 snap-start scroll-ml-6 flex-col overflow-hidden rounded-[1.65rem] border border-white/[0.09] bg-[#0b2028]/88 p-5 text-left shadow-[0_24px_70px_rgba(0,0,0,0.28)] outline-none backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:rotate-[-0.8deg] hover:border-white/18 hover:bg-[#0d2630]/94 hover:shadow-[0_30px_90px_rgba(0,0,0,0.36)] focus-visible:-translate-y-1 focus-visible:border-white/22 focus-visible:ring-2 focus-visible:ring-white/28 sm:w-[22rem] sm:p-6 lg:w-[24rem]"
                   >
-                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(159,231,191,0.1),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.06),transparent_44%)]" aria-hidden />
-                    <svg
-                      className="pointer-events-none absolute bottom-0 right-0 h-40 w-full text-white opacity-[0.08] transition duration-300 group-hover:opacity-[0.13]"
-                      viewBox="0 0 520 180"
-                      fill="none"
-                      aria-hidden
-                    >
-                      <path d="M18 132 C92 104 132 112 188 76 C246 38 284 74 326 60 C374 44 410 30 500 40" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                      <path d="M92 140 L160 92 L220 136 L284 72 L352 142 L418 92" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                    <Image
+                      src={project.cover}
+                      alt=""
+                      fill
+                      sizes="(min-width: 1024px) 384px, (min-width: 640px) 352px, 296px"
+                      className="pointer-events-none object-cover object-center opacity-35 transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                      aria-hidden="true"
+                    />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#061820]/60 via-[#061820]/90 to-[#061820]/95" aria-hidden />
 
                     <div className="relative flex items-start justify-between gap-4">
-                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/40">
+                      <p className="shrink-0 text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/65">
                         Case {project.number}
                       </p>
                       <span className="rounded-full border border-white/10 bg-white/[0.045] px-3 py-1 text-[0.62rem] uppercase tracking-[0.16em] text-white/52">
@@ -1339,7 +1350,7 @@ export default function Home() {
                       </span>
                     </div>
 
-                    <h3 className="relative mt-9 max-w-[18rem] text-2xl font-semibold tracking-[-0.04em] text-white sm:text-[1.9rem] sm:leading-[1.05]">
+                    <h3 className="relative mt-16 max-w-[18rem] text-2xl font-semibold tracking-[-0.04em] text-white sm:text-[1.9rem] sm:leading-[1.05]">
                       {project.title}
                     </h3>
 
@@ -1348,11 +1359,24 @@ export default function Home() {
                     </p>
 
                     <div className="relative mt-auto flex items-end justify-between gap-4 pt-8">
-                      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white/34">
+                      <span className="relative text-xs font-semibold uppercase tracking-[0.18em] text-white/34">
+                        {project.href === "/projects/trustkaki" ? (
+                          <svg
+                            viewBox="0 0 24 24"
+                            className="absolute -right-1 -top-5 h-4 w-4 rotate-12 text-[#e9ca78]"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
+                            <path d="m3 6 5 4 4-7 4 7 5-4-2 12H5L3 6Zm2 14h14v2H5v-2Z" />
+                          </svg>
+                        ) : null}
                         {project.subtitle}
                       </span>
-                      <span className="shrink-0 translate-y-0 rounded-full border border-white/14 bg-white/[0.06] px-4 py-2 text-xs font-semibold text-white/68 opacity-100 transition duration-300 sm:translate-y-1 sm:border-transparent sm:bg-transparent sm:text-white/0 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:border-white/14 sm:group-hover:bg-white/[0.06] sm:group-hover:text-white/78 sm:group-hover:opacity-100 sm:group-focus-visible:translate-y-0 sm:group-focus-visible:border-white/14 sm:group-focus-visible:bg-white/[0.06] sm:group-focus-visible:text-white/78 sm:group-focus-visible:opacity-100">
-                        View case study
+                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/14 bg-white/[0.06] text-white/75 transition duration-200 group-hover:border-white/30 group-hover:bg-white/10 group-hover:text-white group-focus-visible:text-white">
+                        <span className="sr-only">View {project.title} case study</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                          <path d="M5 12h14m-6-6 6 6-6 6" />
+                        </svg>
                       </span>
                     </div>
                   </Link>
@@ -1375,28 +1399,39 @@ export default function Home() {
           </p>
 
           <div className="mt-8 flex flex-wrap gap-4">
-            {/* Email */}
             <a
               href="mailto:minxie0000@gmail.com"
-              className="group inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-medium text-white/85 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-white/[0.08] hover:border-white/30"
+              aria-label="Email Min Xie at minxie0000@gmail.com"
+              title="Email"
+              className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/85 transition duration-200 hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9fe7bf] focus-visible:ring-offset-4 focus-visible:ring-offset-[#061820] motion-reduce:transform-none motion-reduce:transition-none"
             >
-              📬 Email
-              <span className="text-white/50 transition-transform duration-300 group-hover:translate-x-0.5">
-                minxie0000@gmail.com →
-              </span>
+              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor" aria-hidden="true">
+                <path d="M24 5.457v13.909c0 .904-.733 1.637-1.636 1.637h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.964L12 9.548l8.073-6.055C21.69 2.279 24 3.434 24 5.457ZM5.455 8.457 12 13.366l6.545-4.91V5.73L12 10.64 5.455 5.73v2.727Z" />
+              </svg>
             </a>
-
-            {/* LinkedIn */}
             <a
               href="https://www.linkedin.com/in/min-xie-ng/"
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-medium text-white/85 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-white/[0.08] hover:border-white/30"
+              aria-label="Min Xie on LinkedIn"
+              title="LinkedIn"
+              className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/85 transition duration-200 hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9fe7bf] focus-visible:ring-offset-4 focus-visible:ring-offset-[#061820] motion-reduce:transform-none motion-reduce:transition-none"
             >
-              💼 LinkedIn
-              <span className="text-white/50 transition-transform duration-300 group-hover:translate-x-0.5">
-                /min-xie-ng →
-              </span>
+              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor" aria-hidden="true">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286ZM5.337 7.433a2.062 2.062 0 1 1 0-4.124 2.062 2.062 0 0 1 0 4.124ZM7.119 20.452H3.555V9h3.564v11.452ZM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003Z" />
+              </svg>
+            </a>
+            <a
+              href="https://github.com/minxie-ng"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Min Xie on GitHub"
+              title="GitHub"
+              className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/5 text-white/85 transition duration-200 hover:-translate-y-0.5 hover:border-white/30 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9fe7bf] focus-visible:ring-offset-4 focus-visible:ring-offset-[#061820] motion-reduce:transform-none motion-reduce:transition-none"
+            >
+              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor" aria-hidden="true">
+                <path d="M12 .297a12 12 0 0 0-3.793 23.385c.6.111.82-.261.82-.577v-2.234c-3.338.726-4.043-1.416-4.043-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.835 2.809 1.305 3.495.998.108-.776.419-1.305.762-1.605-2.665-.304-5.467-1.334-5.467-5.931 0-1.31.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23a11.52 11.52 0 0 1 6.006 0c2.291-1.552 3.297-1.23 3.297-1.23.653 1.652.242 2.873.119 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.216.694.825.576A12.001 12.001 0 0 0 12 .297Z" />
+              </svg>
             </a>
           </div>
         </div>
@@ -1533,6 +1568,20 @@ export default function Home() {
 
         .project-gallery-rail {
           scrollbar-width: none;
+          -webkit-mask-image: linear-gradient(
+            to right,
+            transparent,
+            black 24px,
+            black calc(100% - 24px),
+            transparent
+          );
+          mask-image: linear-gradient(
+            to right,
+            transparent,
+            black 24px,
+            black calc(100% - 24px),
+            transparent
+          );
         }
 
         .project-gallery-rail::-webkit-scrollbar {
